@@ -9,6 +9,7 @@
   let routeBarHidden = false;
   let nearRadius = Number(localStorage.getItem('nv:nearRadius') || 25);
   let nearPos = null;
+  let routeBarEmpty = false;
   let searchTarget = 'lookup';
   let compassOn = false;
   let heading = 0;
@@ -65,7 +66,9 @@
           <button class="nv-point-card dest" id="nv-end-card"><span>DESTINO</span><strong id="nv-end-name">Elegir destino</strong></button>
           <div id="nv-route-page-summary">Define salida y destino para calcular la ruta.</div>
           <button class="nv-primary" id="nv-calc-page">Calcular ruta</button>
+          <div class="nv-secondary-row"><button id="nv-gps-route">🎯 GPS</button><button id="nv-manual-route">✋ Manual</button><button id="nv-weather-route">🌦️ Clima</button></div>
           <div class="nv-secondary-row"><button id="nv-save-page">Guardar</button><button id="nv-share-page">Compartir</button><button id="nv-routes-page">Mis rutas</button></div>
+          <button id="nv-reset-page" style="width:100%;margin-top:8px;padding:9px;border-radius:12px;border:1px solid #ffd3cf;background:#fff0ef;color:#b42318;font-weight:700">Reset completo</button>
           <button class="nv-secondary-row" id="nv-view-map" style="width:100%;margin-top:8px;padding:10px;border-radius:12px;border:1px solid var(--border);background:#fff;color:#333;font-weight:700">Ver mapa</button>
         </div>
       </div>
@@ -249,8 +252,12 @@
     const sb = $('#sidebar');
     const wasOpen = !!(sb && sb.classList.contains('open')) || !!document.querySelector('.nv-page.open');
     closeSheets(); closeNativePages();
-    if (wasOpen) { closePanel(); routeBarHidden = false; }
-    else { routeBarHidden = !routeBarHidden; }
+    if (wasOpen) { closePanel(); routeBarHidden = false; routeBarEmpty = false; }
+    else {
+      const dv = (document.getElementById('r-dist')?.textContent || '').trim();
+      const hasRoute = dv && !/^0\s*km$/i.test(dv);
+      if (hasRoute) routeBarHidden = !routeBarHidden; else routeBarEmpty = !routeBarEmpty;
+    }
     syncRouteBar();
     markActive('map');
   }
@@ -337,9 +344,13 @@
       setTimeout(() => { closeNativePages(); syncRouteBar(); markActive('map'); renderRoutePage(); }, 1600);
     });
     $('#nv-route-reset-page')?.addEventListener('click', () => { const b = document.getElementById('btn-reset-route'); if (b) b.click(); renderRoutePage(); });
+    $('#nv-gps-route')?.addEventListener('click', () => { const b = document.getElementById('btn-gps'); if (b) b.click(); const sum = $('#nv-route-page-summary'); if (sum) sum.textContent = 'Obteniendo GPS…'; setTimeout(renderRoutePage, 1600); });
+    $('#nv-manual-route')?.addEventListener('click', () => { closeNativePages(); const b = document.getElementById('btn-manual-map'); if (b) b.click(); markActive('map'); });
+    $('#nv-weather-route')?.addEventListener('click', () => { openSheet('nv-sheet-weather'); loadNativeWeather(); });
     $('#nv-save-page')?.addEventListener('click', () => { const b = document.getElementById('btn-save'); if (b) b.click(); });
     $('#nv-share-page')?.addEventListener('click', () => { const b = document.getElementById('btn-share'); if (b) b.click(); });
     $('#nv-routes-page')?.addEventListener('click', () => { closeNativePages(); const t = document.getElementById('btn-tools'); if (t) t.click(); });
+    $('#nv-reset-page')?.addEventListener('click', () => { const b = document.getElementById('btn-reset-all'); if (b) b.click(); });
     $('#nv-view-map')?.addEventListener('click', () => { closeNativePages(); syncRouteBar(); markActive('map'); });
     $('#nv-zoom-in').addEventListener('click', () => { if (window.map) window.map.zoomIn(); });
     $('#nv-zoom-out').addEventListener('click', () => { if (window.map) window.map.zoomOut(); });
@@ -411,11 +422,7 @@
   }
 
   function openProfile() {
-    openTab('ruta');
-    setTimeout(() => {
-      const el = document.getElementById('elevation-chart');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 160);
+    openRoutePage();
   }
 
   function syncRouteBar() {
@@ -428,10 +435,14 @@
     const dv = (dist?.textContent || '').trim();
     const tv = (time?.textContent || '').trim();
     const valid = dv && !/^0\s*km$/i.test(dv) && !/^-$/.test(dv);
-    bar.classList.toggle('show', !!valid && !routeBarHidden);
+    const showEmpty = !valid && routeBarEmpty;
+    bar.classList.toggle('show', (!!valid && !routeBarHidden) || showEmpty);
     if (valid && !routeBarHidden) {
       $('#nv-route-title').textContent = `${dv} · ${tv || ''}`.trim();
       $('#nv-route-sub').textContent = `${start?.textContent || ''} → ${end?.textContent || ''}`;
+    } else if (showEmpty) {
+      $('#nv-route-title').textContent = 'Sin ruta';
+      $('#nv-route-sub').textContent = 'Toca para configurar salida y destino';
     }
     if (document.querySelector('#nv-page-route.open')) renderRoutePage();
   }

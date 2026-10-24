@@ -1,5 +1,5 @@
 /* Rutas Moteras WEB-V1.8: shell y datos en caché; APIs y teselas siempre online. */
-const CACHE = 'rutas-moteras-v1.8-7';
+const CACHE = 'rutas-moteras-v1.8-8';
 const CORE = [
   './',
   './index.html',
