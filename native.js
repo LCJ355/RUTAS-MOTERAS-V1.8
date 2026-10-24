@@ -229,15 +229,15 @@
 
   let nvPoiLayer = null, nvPoiKind = null;
   const NV_POI = {
-    dealer: { q: 'shop=motorcycle', km: 50, label: 'Concesionario H-D', icon: '🏍️' },
-    fuel: { q: 'amenity=fuel', km: 15, label: 'Gasolinera', icon: '⛽' },
-    restaurant: { q: 'amenity=restaurant', km: 15, label: 'Restaurante', icon: '🍴' },
-    hotel: { q: 'tourism=hotel', km: 15, label: 'Alojamiento', icon: '🛏️' },
-    parking: { q: 'amenity=parking', km: 15, label: 'Aparcamiento', icon: 'P' },
-    drinking_water: { q: 'amenity=drinking_water', km: 15, label: 'Fuente de agua', icon: '💧' },
-    hospital: { q: 'amenity=hospital', km: 20, label: 'Hospital', icon: 'H' },
-    car_repair: { q: 'shop=car_repair', km: 20, label: 'Taller', icon: '🔧' },
-    supermarket: { q: 'shop=supermarket', km: 15, label: 'Supermercado', icon: '🛒' }
+    dealer: { term: 'concesionario Harley Davidson', q: 'shop=motorcycle', km: 50, label: 'Concesionario H-D', icon: '🏍️' },
+    fuel: { term: 'gasolinera', q: 'amenity=fuel', km: 15, label: 'Gasolinera', icon: '⛽' },
+    restaurant: { term: 'restaurante', q: 'amenity=restaurant', km: 15, label: 'Restaurante', icon: '🍴' },
+    hotel: { term: 'hotel', q: 'tourism=hotel', km: 15, label: 'Alojamiento', icon: '🛏️' },
+    parking: { term: 'aparcamiento', q: 'amenity=parking', km: 15, label: 'Aparcamiento', icon: 'P' },
+    drinking_water: { term: 'fuente', q: 'amenity=drinking_water', km: 15, label: 'Fuente de agua', icon: '💧' },
+    hospital: { term: 'hospital', q: 'amenity=hospital', km: 20, label: 'Hospital', icon: 'H' },
+    car_repair: { term: 'taller', q: 'shop=car_repair', km: 20, label: 'Taller', icon: '🔧' },
+    supermarket: { term: 'supermercado', q: 'shop=supermarket', km: 15, label: 'Supermercado', icon: '🛒' }
   };
   function clearNativePois() {
     if (nvPoiLayer && window.map) { try { window.map.removeLayer(nvPoiLayer); } catch {} }
@@ -254,15 +254,28 @@
     toast(`Buscando ${cfg.label.toLowerCase()}…`);
     try {
       let data = null, lastErr = '';
-      for (const mirror of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
-        try {
-          const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 25000);
-          const res = await fetch(mirror + '?data=' + encodeURIComponent(q), { signal: ac.signal });
-          clearTimeout(timer);
-          if (!res.ok) { lastErr = 'HTTP ' + res.status; continue; }
-          data = await res.json();
-          if (data && data.elements && data.elements.length) break;
-        } catch (e) { lastErr = e.message; }
+      // Nominatim es más rápido en móvil; Overpass queda como respaldo.
+      try {
+        const dLat = cfg.km / 111, dLon = cfg.km / (111 * Math.cos(c.lat * Math.PI / 180));
+        const nUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=40&bounded=1&viewbox=${c.lng - dLon},${c.lat + dLat},${c.lng + dLon},${c.lat - dLat}&q=${encodeURIComponent(cfg.term)}`;
+        const nr = await fetch(nUrl, { signal: AbortSignal.timeout(10000) });
+        if (nr.ok) {
+          const arr = await nr.json();
+          const els = (arr || []).map(x => ({ lat: Number(x.lat), lon: Number(x.lon), tags: { name: (x.display_name || '').split(',')[0] } }));
+          if (els.length) data = { elements: els };
+        }
+      } catch (e) { lastErr = e.message; }
+      if (!data) {
+        for (const mirror of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
+          try {
+            const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 12000);
+            const res = await fetch(mirror + '?data=' + encodeURIComponent(q), { signal: ac.signal });
+            clearTimeout(timer);
+            if (!res.ok) { lastErr = 'HTTP ' + res.status; continue; }
+            data = await res.json();
+            if (data && data.elements && data.elements.length) break;
+          } catch (e) { lastErr = e.message; }
+        }
       }
       if (!data) throw new Error(lastErr || 'sin respuesta');
       nvPoiLayer = window.L.layerGroup().addTo(window.map);
