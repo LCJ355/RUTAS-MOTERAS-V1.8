@@ -216,24 +216,16 @@
     const q = `[out:json][timeout:25];(nwr[${cfg.q}](around:${cfg.km * 1000},${c.lat},${c.lng}););out center 40;`;
     toast(`Buscando ${cfg.label.toLowerCase()}…`);
     try {
-      const mirrors = [
-        'https://overpass-api.de/api/interpreter',
-        'https://overpass.kumi.systems/api/interpreter',
-        'https://overpass.private.coffee/api/interpreter',
-        'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
-      ];
       let data = null, lastErr = '';
-      const results = await Promise.allSettled(mirrors.map(async mirror => {
-        const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 7000);
+      for (const mirror of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
         try {
+          const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 25000);
           const res = await fetch(mirror + '?data=' + encodeURIComponent(q), { signal: ac.signal });
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          return await res.json();
-        } finally { clearTimeout(timer); }
-      }));
-      for (const r of results) {
-        if (r.status === 'fulfilled' && r.value && r.value.elements && r.value.elements.length) { data = r.value; break; }
-        if (r.status === 'rejected') lastErr = r.reason?.message || 'error';
+          clearTimeout(timer);
+          if (!res.ok) { lastErr = 'HTTP ' + res.status; continue; }
+          data = await res.json();
+          if (data && data.elements && data.elements.length) break;
+        } catch (e) { lastErr = e.message; }
       }
       if (!data) throw new Error(lastErr || 'sin respuesta');
       nvPoiLayer = window.L.layerGroup().addTo(window.map);
