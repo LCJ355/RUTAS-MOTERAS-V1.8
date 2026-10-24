@@ -70,6 +70,7 @@
           <button class="nv-primary" id="nv-calc-page">Calcular ruta</button>
           <div class="nv-secondary-row"><button id="nv-gps-route">🎯 GPS</button><button id="nv-manual-route">✋ Manual</button><button id="nv-weather-route">🌦️ Clima</button></div>
           <div class="nv-secondary-row"><button id="nv-poi-route">📍 POIs</button><button id="nv-gpx-route">🧭 GPX</button><button id="nv-traffic-route">🚦 Tráfico</button></div>
+          <div class="nv-secondary-row"><button id="nv-share-maps-page">🗺️ Google Maps</button><button id="nv-share-wa-page">💬 WhatsApp</button></div>
           <div class="nv-secondary-row"><button id="nv-save-page">Guardar</button><button id="nv-share-page">Compartir</button><button id="nv-routes-page">Mis rutas</button></div>
           <button id="nv-reset-page" style="width:100%;margin-top:8px;padding:9px;border-radius:12px;border:1px solid #ffd3cf;background:#fff0ef;color:#b42318;font-weight:700">Reset completo</button>
           <button class="nv-secondary-row" id="nv-view-map" style="width:100%;margin-top:8px;padding:10px;border-radius:12px;border:1px solid var(--border);background:#fff;color:#333;font-weight:700">Ver mapa</button>
@@ -112,6 +113,12 @@
         <div id="nv-search-results"></div>
       </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
+    const tools = document.getElementById('tools-panel');
+    if (tools && !document.getElementById('nv-publish-photos')) {
+      tools.insertAdjacentHTML('beforeend', '<button class="tools-item" id="nv-publish-photos">📸 Publicar fotos</button><button class="tools-item" id="nv-publish-access">🔓 Publicar accesos</button>');
+      document.getElementById('nv-publish-photos').addEventListener('click', () => { if (window.exportPhotosToFile) window.exportPhotosToFile(); });
+      document.getElementById('nv-publish-access').addEventListener('click', () => { if (window.exportAccessToFile) window.exportAccessToFile(); });
+    }
     bindShell();
     observePanel();
     syncRouteBar();
@@ -379,6 +386,8 @@
     $('#nv-gpx-route')?.addEventListener('click', () => { closeNativePages(); const t = document.getElementById('btn-tools'); if (t) t.click(); const r = document.getElementById('btn-routes-toggle'); if (r) setTimeout(() => r.click(), 80); });
     $('#nv-traffic-route')?.addEventListener('click', () => { if (window.openModal) window.openModal('traffic-modal'); });
     $('#nv-traffic-layer')?.addEventListener('click', () => { closeSheets(); if (window.openModal) window.openModal('traffic-modal'); });
+    $('#nv-share-maps-page')?.addEventListener('click', () => { const b = document.getElementById('btn-share-maps'); if (b) b.click(); });
+    $('#nv-share-wa-page')?.addEventListener('click', () => { const b = document.getElementById('btn-share-wa'); if (b) b.click(); });
     $('#nv-save-page')?.addEventListener('click', () => { const b = document.getElementById('btn-save'); if (b) b.click(); });
     $('#nv-share-page')?.addEventListener('click', () => { const b = document.getElementById('btn-share'); if (b) b.click(); });
     $('#nv-routes-page')?.addEventListener('click', () => { closeNativePages(); const t = document.getElementById('btn-tools'); if (t) t.click(); });
