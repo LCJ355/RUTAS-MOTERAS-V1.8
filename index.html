@@ -2083,7 +2083,7 @@ parseHash(); loadPhotosFile(); loadAccessFile(); updateAccessStatus(); const ghT
 renderList(); updSum(); if (mcg.getLayers().length > 0) try { map.fitBounds(mcg.getBounds().pad(0.08)); } catch {} renderSaved(); updateSaveStatus();
 
 /* === EXPONER HELPERS A window (para onclick inline de popups / GitHub / reset / GPX) === */
-Object.assign(window, { safeLS, toast, renderList, updateSaveStatus, updateAccessStatus, setStart, setEnd, toggleWp, cycleAcc, photoClick, deletePhoto, editCaption, updPop, exportPhotosToFile, exportAccessToFile, getPhoto, getCaption, getAccType, aLbl, saveGithubToken, clearGithubToken, getGithubToken, resetLocalData, resetAllConfirm, mm, FD, map, tileLayers, getPos, fountainId, startTown, endTown, waypoints, searchTowns, searchFountains, setDestino, showFountainOnMap, setLayer, openMapSearch, closeMapSearch, selectTab, togglePanel, getWeather });
+Object.assign(window, { safeLS, toast, renderList, updateSaveStatus, updateAccessStatus, setStart, setEnd, toggleWp, cycleAcc, photoClick, deletePhoto, editCaption, updPop, exportPhotosToFile, exportAccessToFile, getPhoto, getCaption, getAccType, aLbl, saveGithubToken, clearGithubToken, getGithubToken, resetLocalData, resetAllConfirm, mm, FD, map, tileLayers, getPos, fountainId, startTown, endTown, waypoints, POSTAL_DATA, syncMm, updSum, invalidateRoute, openModal, searchTowns, searchFountains, setDestino, showFountainOnMap, setLayer, openMapSearch, closeMapSearch, selectTab, togglePanel, getWeather });
 Object.defineProperties(window, {
   startTown: { get() { return startTown; }, set(v) { startTown = v; }, configurable: true },
   endTown: { get() { return endTown; }, set(v) { endTown = v; }, configurable: true },

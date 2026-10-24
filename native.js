@@ -62,11 +62,14 @@
       <div id="nv-page-route" class="nv-page">
         <div class="nv-page-head"><button class="nv-back" data-nv-page-close aria-label="Volver al mapa">←</button><h2>🛵 Ruta</h2><button class="nv-mini" id="nv-route-reset-page" aria-label="Restablecer ruta">↺</button></div>
         <div class="nv-page-body">
-          <button class="nv-point-card" id="nv-start-card"><span>SALIDA</span><strong id="nv-start-name">Elegir salida</strong></button>
-          <button class="nv-point-card dest" id="nv-end-card"><span>DESTINO</span><strong id="nv-end-name">Elegir destino</strong></button>
+          <button class="nv-point-card" id="nv-start-card"><span>SALIDA</span><strong id="nv-start-name">Elegir salida</strong><small id="nv-start-cp"></small></button>
+          <button class="nv-point-card dest" id="nv-end-card"><span>DESTINO</span><strong id="nv-end-name">Elegir destino</strong><small id="nv-end-cp"></small></button>
+          <div class="nv-wp-head"><strong>Paradas</strong><button id="nv-add-wp">+ Añadir</button></div>
+          <div id="nv-route-wps"></div>
           <div id="nv-route-page-summary">Define salida y destino para calcular la ruta.</div>
           <button class="nv-primary" id="nv-calc-page">Calcular ruta</button>
           <div class="nv-secondary-row"><button id="nv-gps-route">🎯 GPS</button><button id="nv-manual-route">✋ Manual</button><button id="nv-weather-route">🌦️ Clima</button></div>
+          <div class="nv-secondary-row"><button id="nv-poi-route">📍 POIs</button><button id="nv-gpx-route">🧭 GPX</button><button id="nv-traffic-route">🚦 Tráfico</button></div>
           <div class="nv-secondary-row"><button id="nv-save-page">Guardar</button><button id="nv-share-page">Compartir</button><button id="nv-routes-page">Mis rutas</button></div>
           <button id="nv-reset-page" style="width:100%;margin-top:8px;padding:9px;border-radius:12px;border:1px solid #ffd3cf;background:#fff0ef;color:#b42318;font-weight:700">Reset completo</button>
           <button class="nv-secondary-row" id="nv-view-map" style="width:100%;margin-top:8px;padding:10px;border-radius:12px;border:1px solid var(--border);background:#fff;color:#333;font-weight:700">Ver mapa</button>
@@ -78,6 +81,7 @@
         <div class="nv-choice">
           <button data-nv-layer="osm">OSM</button><button data-nv-layer="topo">Topo</button>
           <button data-nv-layer="cyclo">CyclOSM</button><button data-nv-layer="sat">Satélite</button>
+          <button id="nv-traffic-layer">🚦 Tráfico DGT</button>
         </div>
       </div>
       <div id="nv-sheet-poi" class="nv-sheet">
@@ -179,16 +183,39 @@
     const sn = $('#nv-start-name'), enm = $('#nv-end-name'), sum = $('#nv-route-page-summary');
     if (sn) sn.textContent = st && st.n ? st.n : 'Elegir salida';
     if (enm) enm.textContent = en && en.n ? en.n : 'Elegir destino';
+    const wps = $('#nv-route-wps');
+    if (wps) {
+      const list = (window.waypoints || []).slice();
+      wps.innerHTML = list.length ? '' : '<div class="nv-wp-empty">Sin paradas. Usa + Añadir.</div>';
+      list.forEach((w, i) => {
+        const row = document.createElement('div'); row.className = 'nv-wp-row';
+        row.innerHTML = `<span class="nv-wp-num">${i + 1}</span><span class="nv-wp-name">${escapeHtml(w.n || 'Parada')}</span><button data-wp-up="${i}" aria-label="Subir">↑</button><button data-wp-down="${i}" aria-label="Bajar">↓</button><button data-wp-del="${i}" aria-label="Quitar">✕</button>`;
+        row.querySelector('[data-wp-up]')?.addEventListener('click', () => moveWp(i, -1));
+        row.querySelector('[data-wp-down]')?.addEventListener('click', () => moveWp(i, 1));
+        row.querySelector('[data-wp-del]')?.addEventListener('click', () => { if (window.toggleWp) window.toggleWp(w); if (window.syncMm) window.syncMm(); if (window.updSum) window.updSum(); if (window.invalidateRoute) window.invalidateRoute({ clearStatus: true }); renderRoutePage(); });
+        wps.appendChild(row);
+      });
+    }
+    const cp = f => (f && f.p && window.POSTAL_DATA && window.POSTAL_DATA[f.p] && window.POSTAL_DATA[f.p].length) ? 'CP ' + window.POSTAL_DATA[f.p].join(', ') : '';
+    const scp = $('#nv-start-cp'), ecp = $('#nv-end-cp');
+    if (scp) scp.textContent = cp(st); if (ecp) ecp.textContent = cp(en);
     if (!sum) return;
     const dv = (document.getElementById('r-dist')?.textContent || '').trim();
     const tv = (document.getElementById('r-time')?.textContent || '').trim();
     if (dv && !/^0\s*km$/i.test(dv)) sum.innerHTML = `<strong>${escapeHtml(dv)}</strong> · ${escapeHtml(tv)}<br><small>${escapeHtml(st?.n || '-')} → ${escapeHtml(en?.n || '-')}</small>`;
     else sum.textContent = (st && st.la ? 'Salida lista. ' : 'Define salida. ') + (en && en.la ? 'Destino listo.' : 'Define destino.');
   }
+  function moveWp(i, dir) {
+    const a = window.waypoints; if (!a || !a.length) return;
+    const j = i + dir; if (j < 0 || j >= a.length) return;
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+    if (window.syncMm) window.syncMm(); if (window.updSum) window.updSum(); if (window.invalidateRoute) window.invalidateRoute({ clearStatus: true });
+    renderRoutePage();
+  }
   function openNativeSearch(target) {
     searchTarget = target || 'lookup';
     const t = $('#nv-search-title');
-    if (t) t.textContent = searchTarget === 'start' ? 'Elegir salida' : searchTarget === 'dest' ? 'Elegir destino' : 'Buscar';
+    if (t) t.textContent = searchTarget === 'start' ? 'Elegir salida' : searchTarget === 'dest' ? 'Elegir destino' : searchTarget === 'wp' ? 'Añadir parada' : 'Buscar';
     openSheet('nv-search-sheet');
     const i = $('#nv-search-input'); if (i) { i.value = ''; renderNativeSearch(''); setTimeout(() => i.focus(), 80); }
   }
@@ -336,6 +363,7 @@
     $('#nv-near-refresh')?.addEventListener('click', loadNear);
     $('#nv-start-card')?.addEventListener('click', () => openNativeSearch('start'));
     $('#nv-end-card')?.addEventListener('click', () => openNativeSearch('dest'));
+    $('#nv-add-wp')?.addEventListener('click', () => openNativeSearch('wp'));
     $('#nv-calc-page')?.addEventListener('click', () => {
       const btn = document.getElementById('btn-calc'); const sum = $('#nv-route-page-summary');
       if (!window.startTown || !window.startTown.la) { toast('Elige la salida', 'warn'); return; }
@@ -347,10 +375,14 @@
     $('#nv-gps-route')?.addEventListener('click', () => { const b = document.getElementById('btn-gps'); if (b) b.click(); const sum = $('#nv-route-page-summary'); if (sum) sum.textContent = 'Obteniendo GPS…'; setTimeout(renderRoutePage, 1600); });
     $('#nv-manual-route')?.addEventListener('click', () => { closeNativePages(); const b = document.getElementById('btn-manual-map'); if (b) b.click(); markActive('map'); });
     $('#nv-weather-route')?.addEventListener('click', () => { openSheet('nv-sheet-weather'); loadNativeWeather(); });
+    $('#nv-poi-route')?.addEventListener('click', () => openSheet('nv-sheet-poi'));
+    $('#nv-gpx-route')?.addEventListener('click', () => { closeNativePages(); const t = document.getElementById('btn-tools'); if (t) t.click(); const r = document.getElementById('btn-routes-toggle'); if (r) setTimeout(() => r.click(), 80); });
+    $('#nv-traffic-route')?.addEventListener('click', () => { if (window.openModal) window.openModal('traffic-modal'); });
+    $('#nv-traffic-layer')?.addEventListener('click', () => { closeSheets(); if (window.openModal) window.openModal('traffic-modal'); });
     $('#nv-save-page')?.addEventListener('click', () => { const b = document.getElementById('btn-save'); if (b) b.click(); });
     $('#nv-share-page')?.addEventListener('click', () => { const b = document.getElementById('btn-share'); if (b) b.click(); });
     $('#nv-routes-page')?.addEventListener('click', () => { closeNativePages(); const t = document.getElementById('btn-tools'); if (t) t.click(); });
-    $('#nv-reset-page')?.addEventListener('click', () => { const b = document.getElementById('btn-reset-all'); if (b) b.click(); });
+    $('#nv-reset-page')?.addEventListener('click', () => { if (window.resetAllConfirm) window.resetAllConfirm(); });
     $('#nv-view-map')?.addEventListener('click', () => { closeNativePages(); syncRouteBar(); markActive('map'); });
     $('#nv-zoom-in').addEventListener('click', () => { if (window.map) window.map.zoomIn(); });
     $('#nv-zoom-out').addEventListener('click', () => { if (window.map) window.map.zoomOut(); });
@@ -405,6 +437,7 @@
         closeSheets();
         if (searchTarget === 'start' && window.setStart) { window.setStart(f); openRoutePage(); }
         else if (searchTarget === 'dest' && window.setEnd) { window.setEnd(f); openRoutePage(); }
+        else if (searchTarget === 'wp' && window.toggleWp) { window.toggleWp(f); openRoutePage(); }
         else if (window.showFountainOnMap) window.showFountainOnMap(f.id);
       });
       box.appendChild(d);
