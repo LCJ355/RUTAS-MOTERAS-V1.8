@@ -223,15 +223,17 @@
         'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
       ];
       let data = null, lastErr = '';
-      for (const mirror of mirrors) {
+      const results = await Promise.allSettled(mirrors.map(async mirror => {
+        const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 7000);
         try {
-          const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 18000);
           const res = await fetch(mirror + '?data=' + encodeURIComponent(q), { signal: ac.signal });
-          clearTimeout(timer);
-          if (!res.ok) { lastErr = 'HTTP ' + res.status; continue; }
-          data = await res.json();
-          if (data && data.elements) break;
-        } catch (e) { lastErr = e.message; }
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.json();
+        } finally { clearTimeout(timer); }
+      }));
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value && r.value.elements && r.value.elements.length) { data = r.value; break; }
+        if (r.status === 'rejected') lastErr = r.reason?.message || 'error';
       }
       if (!data) throw new Error(lastErr || 'sin respuesta');
       nvPoiLayer = window.L.layerGroup().addTo(window.map);
