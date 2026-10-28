@@ -127,6 +127,10 @@
         <div class="nv-sheet-head"><h3 id="nv-pc-kind">POI</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div id="nv-pc-body"></div>
       </div>
+      <div id="nv-sheet-profile" class="nv-sheet">
+        <div class="nv-sheet-head"><h3>📈 Perfil de altura</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
+        <div id="nv-profile-chart" class="nv-profile-chart"></div>
+      </div>
       <div id="nv-sheet-settings" class="nv-sheet">
         <div class="nv-sheet-head"><h3>⚙️ Ruta</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div class="nv-choice">
@@ -195,7 +199,7 @@
     syncMenuTriggers();
   }
   function syncMenuTriggers() {
-    const pairs = [['nv-sheet-poi', '#nv-poi'], ['nv-sheet-poi-card', '#nv-poi'], ['nv-sheet-layers', '#nv-layers'], ['nv-sheet-weather', '#nv-weather'], ['nv-search-sheet', '#nv-search']];
+    const pairs = [['nv-sheet-poi', '#nv-poi'], ['nv-sheet-poi-card', '#nv-poi'], ['nv-sheet-layers', '#nv-layers'], ['nv-sheet-weather', '#nv-weather'], ['nv-search-sheet', '#nv-search'], ['nv-sheet-profile', '#nv-profile']];
     pairs.forEach(([id, sel]) => {
       const a = document.getElementById(id)?.classList.contains('open');
       const b = id === 'nv-sheet-poi-card' && document.getElementById('nv-sheet-poi')?.classList.contains('open');
@@ -792,7 +796,16 @@
   }
 
   function openProfile() {
-    openRoutePage();
+    if (document.getElementById('nv-sheet-profile')?.classList.contains('open')) { closeSheets(); return; }
+    const src = document.getElementById('elevation-chart');
+    const line = src && src.querySelector('svg polyline');
+    if (!line) { toast('Calcula la ruta para ver el perfil de altura', 'warn'); return; }
+    const box = $('#nv-profile-chart');
+    if (!box) return;
+    box.innerHTML = src.innerHTML;
+    box.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    box.querySelectorAll('svg').forEach(el => { el.removeAttribute('width'); el.removeAttribute('height'); });
+    openSheet('nv-sheet-profile');
   }
 
   function syncRouteBar() {

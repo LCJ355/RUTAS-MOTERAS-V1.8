@@ -298,6 +298,11 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
 .map-fit-btn,.stats-row .cp-btn,.btn-sec,.btn-red{
   border-color:var(--pick-border)!important;background:#fff!important;color:var(--pick-text)!important}
 #nv-ri-calc,.nv-primary,.btn-pri{background:var(--pick)!important;border-color:var(--pick)!important;color:#fff!important}
+#nv-profile.green{border-color:var(--sel)!important;box-shadow:0 0 0 2px rgba(46,204,113,.30)!important}
+.nv-profile-chart svg{width:100%;height:180px;display:block}
+.nv-profile-chart .el-stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:13px;color:#555;margin-top:10px}
+.nv-profile-chart .el-stats strong{color:#c2410c}
+
 #nv-ri-undo,#nv-ri-reset{border:1px solid var(--pick-border)!important;background:#fff!important;color:var(--pick-text)!important}
 .tab-btn.active{color:var(--sel-text)!important;border-bottom-color:var(--sel)!important}
 .modal-close{color:var(--pick-text)!important}
