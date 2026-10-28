@@ -187,8 +187,30 @@
     $$('.nv-sheet').forEach(s => s.classList.remove('open'));
     const s = document.getElementById(id); if (s) s.classList.add('open');
     document.body.classList.add('nv-sheet-open');
+    syncMenuTriggers();
   }
-  function closeSheets() { $$('.nv-sheet').forEach(s => s.classList.remove('open')); document.body.classList.remove('nv-sheet-open'); }
+  function closeSheets() {
+    $$('.nv-sheet').forEach(s => s.classList.remove('open'));
+    document.body.classList.remove('nv-sheet-open');
+    syncMenuTriggers();
+  }
+  function syncMenuTriggers() {
+    const pairs = [['nv-sheet-poi', '#nv-poi'], ['nv-sheet-poi-card', '#nv-poi'], ['nv-sheet-layers', '#nv-layers'], ['nv-sheet-weather', '#nv-weather'], ['nv-search-sheet', '#nv-search']];
+    pairs.forEach(([id, sel]) => {
+      const a = document.getElementById(id)?.classList.contains('open');
+      const b = id === 'nv-sheet-poi-card' && document.getElementById('nv-sheet-poi')?.classList.contains('open');
+      $(sel)?.classList.toggle('green', !!(a || b));
+    });
+    const rootOpen = ['nv-sheet-settings', 'nv-sheet-share', 'nv-sheet-record'].some(id => document.getElementById(id)?.classList.contains('open'));
+    if (rootOpen) markActive('settings');
+    else if (document.querySelector('[data-nv-action="settings"].active')) markActive('map');
+  }
+  function toggleSheet(id) {
+    const s = document.getElementById(id);
+    if (s && s.classList.contains('open')) { closeSheets(); return false; }
+    openSheet(id); return true;
+  }
+  function anySheetOpen() { return !!document.querySelector('.nv-sheet.open'); }
 
   function closeNativePages() {
     $$('.nv-page').forEach(p => p.classList.remove('open'));
@@ -613,10 +635,10 @@
   }
 
   function bindShell() {
-    $('#nv-poi').addEventListener('click', () => openSheet('nv-sheet-poi'));
-    $('#nv-search').addEventListener('click', () => openNativeSearch('lookup'));
-    $('#nv-layers').addEventListener('click', () => { syncLayerChoices(); openSheet('nv-sheet-layers'); });
-    $('#nv-weather').addEventListener('click', () => { openSheet('nv-sheet-weather'); const v=$('#nv-weather-view'); if(v && !v.textContent.trim()) v.textContent='Elige una opción.'; });
+    $('#nv-poi').addEventListener('click', () => toggleSheet('nv-sheet-poi'));
+    $('#nv-search').addEventListener('click', () => { if (document.getElementById('nv-search-sheet')?.classList.contains('open')) { closeSheets(); return; } openNativeSearch('lookup'); });
+    $('#nv-layers').addEventListener('click', () => { if (document.getElementById('nv-sheet-layers')?.classList.contains('open')) { closeSheets(); return; } syncLayerChoices(); openSheet('nv-sheet-layers'); });
+    $('#nv-weather').addEventListener('click', () => { if (document.getElementById('nv-sheet-weather')?.classList.contains('open')) { closeSheets(); return; } openSheet('nv-sheet-weather'); const v=$('#nv-weather-view'); if(v && !v.textContent.trim()) v.textContent='Elige una opción.'; });
     $('#nv-close').addEventListener('click', closePanel);
     $$('[data-nv-close-sheet]').forEach(b => b.addEventListener('click', closeSheets));
 
@@ -626,10 +648,10 @@
       if (action === 'map') { motoAction(); return; }
       if (action === 'route') { if (document.querySelector('#nv-page-route.open')) { closeNativePages(); syncRouteBar(); markActive('map'); } else openRoutePage(); return; }
       if (action === 'near') { if (document.querySelector('#nv-page-near.open')) { closeNativePages(); syncRouteBar(); markActive('map'); } else openNearPage(); return; }
-      if (action === 'settings') { markActive('settings'); openSheet('nv-sheet-settings'); return; }
-      if (action === 'tools') { closeNativePages(); markActive('tools'); closePanel(); const t = document.getElementById('btn-tools'); if (t) t.click(); return; }
+      if (action === 'settings') { if (document.getElementById('nv-sheet-settings')?.classList.contains('open')) { closeSheets(); markActive('map'); } else { markActive('settings'); openSheet('nv-sheet-settings'); } return; }
+      if (action === 'tools') { const p = document.getElementById('tools-panel'); if (p && !p.hidden) { p.hidden = true; closeSheets(); markActive('map'); return; } closeSheets(); closeNativePages(); markActive('tools'); setTimeout(() => document.getElementById('btn-tools')?.click(), 0); return; }
       const tab = b.dataset.nvTab;
-      if (tab === 'info') { closeNativePages(); openTab('info'); return; }
+      if (tab === 'info') { const m = document.getElementById('mobile-help-modal'); if (m && !m.hidden && m.style.display !== 'none') { m.querySelector('.modal-close')?.click(); markActive('map'); return; } closeNativePages(); openTab('info'); return; }
       const sb = $('#sidebar');
       if (sb && sb.classList.contains('open') && activeTab === tab) { closePanel(); return; }
       openTab(tab);
@@ -704,7 +726,7 @@
     $('#nv-mode').addEventListener('click', toggleCompass);
     $('#nv-nav').addEventListener('click', () => { const b = document.getElementById('btn-follow-map'); if (b) b.click(); else toast('GPS no disponible'); });
     $('#nv-profile').addEventListener('click', openProfile);
-    $('#nv-route-main').addEventListener('click', () => { routeInfoOpen = true; syncRouteInfo(); });
+    $('#nv-route-main').addEventListener('click', () => { routeInfoOpen = !routeInfoOpen; syncRouteInfo(); });
 
     $$('[data-nv-layer]').forEach(b => b.addEventListener('click', () => {
       if (window.setLayer) window.setLayer(b.dataset.nvLayer);

@@ -104,7 +104,7 @@ html.nv-panel-open #sidebar{box-shadow:none!important}
 .nv-choice button{flex:1 1 46%;padding:14px 10px;border-radius:14px;border:1px solid var(--border);min-width:0;
   background:#f8fafb;color:#222;font-weight:700}
 .nv-choice button.on{border-color:var(--accent);background:#fff1e6;color:#c2410c}
-#nv-search-sheet{top:0;bottom:0;max-height:none;border-radius:0;padding-top:calc(env(safe-area-inset-top,0px) + 10px)}
+#nv-search-sheet{top:0;bottom:calc(78px + env(safe-area-inset-bottom,0px));max-height:none;border-radius:20px 20px 0 0;padding-top:calc(env(safe-area-inset-top,0px) + 10px)}
 .nv-search-row{display:flex;align-items:center;gap:8px}
 .nv-search-row input{flex:1;height:46px;border-radius:23px;border:2px solid var(--accent);padding:0 14px;
   font-size:15px;outline:none;background:#fff}
@@ -288,6 +288,8 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
 :root{--pick:#ff6a00;--pick-border:#ffd5b8;--pick-soft:#fff7f1;--pick-text:#c2410c;--sel:#2ecc71;--sel-soft:#f2fff7;--sel-text:#127a43}
 #nv-locate{border-color:var(--pick)!important}
 #nv-zoom button{border-color:rgba(255,106,0,.85)!important}
+#nv-search.green{border-color:var(--sel)!important}
+
 #nv-close{border-color:var(--pick)!important;color:var(--pick-text)!important;background:var(--pick-soft)!important}
 .nv-sheet-close{border-color:var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
 .nv-choice button,.nv-radius button,.nv-secondary-row button,.nv-page-head .nv-mini,
