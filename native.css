@@ -55,6 +55,16 @@ input,select,textarea{color:var(--text)!important}
 #nv-left button{pointer-events:auto}
 #nv-mode{background:rgba(0,0,0,.58)}
 .nv-compass-ico{width:21px;height:21px;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.nv-info-ico{width:24px;height:24px;display:block;margin:0 auto}
+#nv-sheet-credits .nv-primary{background:var(--pick);margin-top:12px}
+.nv-credits{background:linear-gradient(135deg,#ffa22b,#dd4e00);border-radius:20px;padding:20px 18px 18px;text-align:center;color:#fff;box-shadow:0 8px 24px rgba(221,78,0,.22)}
+.nv-credits-moto{font-size:48px;line-height:1}
+.nv-credits-kicker{font-size:12px;letter-spacing:2px;font-weight:800;color:#ffe7cc;margin-top:6px}
+.nv-credits-name{font-size:30px;line-height:1.1;font-weight:900;margin-top:3px}
+.nv-credits-rule{height:2px;background:rgba(255,255,255,.4);margin:14px 8px}
+.nv-credits-quote{font-size:15px;font-style:italic;line-height:1.45}
+.nv-credits-meta{font-size:12px;color:#ffe7cc;line-height:1.5;margin-top:10px}
+
 .nv-target-ico{width:20px;height:20px;display:block;margin:0 auto}
 .nv-gps-triangle{background:none!important;border:0!important}
 #nv-zoom{position:fixed;z-index:1000;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);
@@ -81,8 +91,8 @@ body.nv-routebar-open #nv-zoom{bottom:calc(env(safe-area-inset-bottom,0px) + 150
   padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:space-around;
   background:rgba(10,10,10,.94);border-top:1px solid rgba(255,255,255,.12);
   box-shadow:0 -5px 20px rgba(0,0,0,.26)}
-.nv-tab{width:52px;height:52px;border-radius:50%;border:3px solid var(--accent);background:rgba(255,255,255,.04);
-  color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;padding:0;
+.nv-tab{width:52px;height:52px;border-radius:50%;border:3px solid var(--accent);background:transparent!important;
+  color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;
   -webkit-tap-highlight-color:transparent}
 .nv-tab.active{border-color:var(--pri)}
 .nv-tab.info{border-color:var(--accent)}
@@ -337,7 +347,7 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
   border-color:var(--sel)!important;background:#fff!important;color:var(--sel-text)!important}
 #nv-record-btn.on{font-weight:800!important}
 .nv-tab.active,.nv-tab.info.active{
-  border-color:var(--sel)!important;background:rgba(255,255,255,.04)!important;color:#fff!important;
+  border-color:var(--sel)!important;background:transparent!important;color:#fff!important;
   box-shadow:0 0 0 2px rgba(46,204,113,.30)!important}
 .nv-ring.green{
   border-color:var(--sel)!important;background:rgba(0,0,0,.58)!important;color:#fff!important;

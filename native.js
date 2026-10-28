@@ -52,7 +52,7 @@
         <button class="nv-tab" data-nv-action="settings" aria-label="Ruta">⚙️</button>
         <button class="nv-tab" data-nv-action="near" aria-label="Fuentes cerca de ti">⛲</button>
         <button class="nv-tab" data-nv-action="tools" aria-label="Datos y rutas guardadas">☰</button>
-        <button class="nv-tab info" data-nv-tab="info" aria-label="Información">ℹ️</button>
+        <button class="nv-tab info" data-nv-action="credits" aria-label="Créditos"><svg class="nv-info-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="7.4" r="1.25" fill="currentColor"/><path d="M12 10.5v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       </nav>
       <div id="nv-page-near" class="nv-page">
         <div class="nv-page-head"><button class="nv-back" data-nv-page-close aria-label="Volver al mapa">←</button><h2>⛲ Fuentes cerca de ti</h2><button class="nv-mini" id="nv-near-refresh" aria-label="Actualizar ubicación">🎯</button></div>
@@ -132,6 +132,19 @@
         <div class="nv-sheet-head"><h3>📈 Perfil de altura</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div id="nv-profile-chart" class="nv-profile-chart"></div>
       </div>
+      <div id="nv-sheet-credits" class="nv-sheet">
+        <div class="nv-sheet-head"><h3>Créditos · Nativa V-1.8</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
+        <div class="nv-credits">
+          <div class="nv-credits-moto">🏍️</div>
+          <div class="nv-credits-kicker">IDEA ORIGINAL DE</div>
+          <div class="nv-credits-name">LUCIANO CJ</div>
+          <div class="nv-credits-rule"></div>
+          <div class="nv-credits-quote">“No me copies sino es para mejorarme”</div>
+          <div class="nv-credits-meta">Rutas Moteras -Fuentes de Andalucía- · 13.719 fuentes</div>
+          <div class="nv-credits-meta">Versión nativa V-1.8 · Android Kotlin + osmdroid</div>
+        </div>
+        <button class="nv-primary" id="nv-credits-close">ACEPTAR</button>
+      </div>
       <div id="nv-sheet-settings" class="nv-sheet">
         <div class="nv-sheet-head"><h3>⚙️ Ruta</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div class="nv-choice">
@@ -205,6 +218,9 @@
     const rootOpen = ['nv-sheet-settings', 'nv-sheet-share', 'nv-sheet-record'].some(id => document.getElementById(id)?.classList.contains('open'));
     if (rootOpen) markActive('settings');
     else if (document.querySelector('[data-nv-action="settings"].active')) markActive('map');
+    const creditsOpen = document.getElementById('nv-sheet-credits')?.classList.contains('open');
+    if (creditsOpen) markActive('credits');
+    else if (document.querySelector('[data-nv-action="credits"].active')) markActive('map');
   }
   function toggleSheet(id) {
     const s = document.getElementById(id);
@@ -666,6 +682,7 @@
       if (action === 'map') { motoAction(); return; }
       if (action === 'route') { if (document.querySelector('#nv-page-route.open')) { closeNativePages(); syncRouteBar(); markActive('map'); } else openRoutePage(); return; }
       if (action === 'near') { if (document.querySelector('#nv-page-near.open')) { closeNativePages(); syncRouteBar(); markActive('map'); } else { closeOtherBottomMenus('pages'); openNearPage(); } return; }
+      if (action === 'credits') { if (document.getElementById('nv-sheet-credits')?.classList.contains('open')) { closeSheets(); markActive('map'); } else { closeOtherBottomMenus('sheets'); markActive('credits'); openSheet('nv-sheet-credits'); } return; }
       if (action === 'settings') { if (document.getElementById('nv-sheet-settings')?.classList.contains('open')) { closeSheets(); markActive('map'); } else { closeOtherBottomMenus('sheets'); markActive('settings'); openSheet('nv-sheet-settings'); } return; }
       if (action === 'tools') { const p = document.getElementById('tools-panel'); if (p && !p.hidden) { p.hidden = true; closeSheets(); markActive('map'); return; } closeOtherBottomMenus('tools'); markActive('tools'); setTimeout(() => document.getElementById('btn-tools')?.click(), 0); return; }
       const tab = b.dataset.nvTab;
@@ -700,6 +717,7 @@
     $('#nv-manual-add')?.addEventListener('click', nvConfirmManual);
     $('#nv-manual-cancel')?.addEventListener('click', () => { nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true'); syncManualBtns(); markActive('map'); toast('Selección manual cancelada'); });
     $('#nv-record-btn')?.addEventListener('click', toggleNativeRecord);
+    $('#nv-credits-close')?.addEventListener('click', closeSheets);
     $('#nv-share-app')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share')?.click(); });
     $('#nv-share-wa')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share-wa')?.click(); });
     $('#nv-share-maps')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share-maps')?.click(); });
