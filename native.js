@@ -242,6 +242,8 @@
     $('#nv-ri-start-name').textContent = `🏁 ${window.startTown?.n || 'Salida'} 🔍`;
     $('#nv-ri-end-name').textContent = `🎯 ${window.endTown?.n || 'Destino'} 🔍`;
     $('#nv-ri-wps-name').textContent = `➕ Paradas: ${(window.waypoints || []).length}/10 🔍`;
+    $('#nv-ri-gps')?.classList.toggle('on', window.startTown?.kind === 'gps');
+    syncManualBtns();
     box.classList.toggle('show', routeInfoOpen);
     if (document.querySelector('#nv-page-route.open')) renderRoutePage();
   }
@@ -361,14 +363,19 @@
 
 
   let nvManualTarget = null, nvManualMarks = [];
+  function syncManualBtns() {
+    const ids = { start: '#nv-ri-start-manual', parada: '#nv-ri-wp-manual', dest: '#nv-ri-end-manual' };
+    Object.keys(ids).forEach(k => $(ids[k])?.classList.toggle('on', nvManualTarget === k));
+  }
+
   function startNvManual(target) {
     const tag = $('#nv-manual-tag'), ov = $('#nv-manual-pick');
     if (!tag || !ov) return;
     nvManualTarget = nvManualTarget === target ? null : target;
-    if (!nvManualTarget) { ov.classList.remove('show'); ov.setAttribute('aria-hidden', 'true'); toast('Manual desactivado'); return; }
+    if (!nvManualTarget) { ov.classList.remove('show'); ov.setAttribute('aria-hidden', 'true'); syncManualBtns(); toast('Manual desactivado'); return; }
     tag.textContent = nvManualTarget === 'start' ? 'SALIDA' : nvManualTarget === 'dest' ? 'DESTINO' : 'PARADA';
     routeInfoOpen = false; syncRouteInfo();
-    ov.classList.add('show'); ov.setAttribute('aria-hidden', 'false');
+    ov.classList.add('show'); ov.setAttribute('aria-hidden', 'false'); syncManualBtns();
     toast('Mueve el mapa y pulsa + para fijar la ' + tag.textContent);
   }
   function nvConfirmManual() {
@@ -395,7 +402,7 @@
       } catch (_) {}
       toast(`Parada ${window.waypoints.length}/10`);
     }
-    nvManualTarget = null;
+    nvManualTarget = null; syncManualBtns();
     $('#nv-manual-pick')?.classList.remove('show');
     $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true');
     routeInfoOpen = true; syncRouteInfo();
@@ -434,12 +441,14 @@
       if (nvRecordWatch != null) { try { navigator.geolocation.clearWatch(nvRecordWatch); } catch (_) {} nvRecordWatch = null; }
       txt.textContent = `Grabación finalizada · ${nvRecordDist.toFixed(2)} km`;
       btn.textContent = 'INICIAR GRABACIÓN';
+      btn.classList.remove('on');
       return;
     }
     if (!navigator.geolocation) { toast('GPS no disponible', 'warn'); return; }
     nvRecording = true; nvRecordDist = 0; nvRecordLast = null;
     txt.textContent = 'Grabando… 0.00 km';
     btn.textContent = 'DETENER GRABACIÓN';
+    btn.classList.add('on');
     nvRecordWatch = navigator.geolocation.watchPosition(p => {
       if (!nvRecording) return;
       const cur = { lat: p.coords.latitude, lon: p.coords.longitude };
@@ -447,6 +456,12 @@
       nvRecordLast = cur;
       txt.textContent = `Grabando… ${nvRecordDist.toFixed(2)} km`;
     }, e => { toast('GPS: ' + e.message, 'warn'); }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
+  }
+
+  function syncLayerChoices() {
+    if (!window.map || !window.tileLayers) return;
+    const active = Object.keys(window.tileLayers).find(k => window.map.hasLayer(window.tileLayers[k]));
+    $$('[data-nv-layer]').forEach(b => b.classList.toggle('on', b.dataset.nvLayer === active));
   }
 
   function motoAction() {
@@ -495,7 +510,7 @@
   function bindShell() {
     $('#nv-poi').addEventListener('click', () => openSheet('nv-sheet-poi'));
     $('#nv-search').addEventListener('click', () => openNativeSearch('lookup'));
-    $('#nv-layers').addEventListener('click', () => openSheet('nv-sheet-layers'));
+    $('#nv-layers').addEventListener('click', () => { syncLayerChoices(); openSheet('nv-sheet-layers'); });
     $('#nv-weather').addEventListener('click', () => { openSheet('nv-sheet-weather'); const v=$('#nv-weather-view'); if(v && !v.textContent.trim()) v.textContent='Elige una opción.'; });
     $('#nv-close').addEventListener('click', closePanel);
     $$('[data-nv-close-sheet]').forEach(b => b.addEventListener('click', closeSheets));
@@ -536,7 +551,7 @@
     $('#nv-ri-wp-manual')?.addEventListener('click', () => startNvManual('parada'));
     $('#nv-ri-undo')?.addEventListener('click', nvUndoRouteStep);
     $('#nv-ri-calc')?.addEventListener('click', () => { document.getElementById('btn-calc')?.click(); });
-    $('#nv-ri-reset')?.addEventListener('click', () => { document.getElementById('btn-reset-route')?.click(); clearNvManualMarks(); syncRouteInfo(); });
+    $('#nv-ri-reset')?.addEventListener('click', () => { document.getElementById('btn-reset-route')?.click(); nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); syncManualBtns(); clearNvManualMarks(); syncRouteInfo(); });
     $('#nv-manual-add')?.addEventListener('click', nvConfirmManual);
     $('#nv-record-btn')?.addEventListener('click', toggleNativeRecord);
     $('#nv-share-app')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share')?.click(); });
@@ -597,7 +612,7 @@
     si.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const first = $('#nv-search-results .nv-result'); if (first) first.click(); } });
     $('#nv-search-clear').addEventListener('click', () => { si.value = ''; renderNativeSearch(''); si.focus(); });
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (nvManualTarget) { nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); } closeSheets(); closePanel(); closeNativePages(); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (nvManualTarget) { nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); syncManualBtns(); } closeSheets(); closePanel(); closeNativePages(); } });
   }
 
   function renderNativeSearch(q) {

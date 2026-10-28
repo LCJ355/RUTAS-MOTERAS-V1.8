@@ -96,7 +96,7 @@ html.nv-panel-open #sidebar{box-shadow:none!important}
   background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.24);
   padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));display:none}
 .nv-sheet.open{display:block}
-.nv-sheet-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.nv-sheet-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;position:sticky;top:0;z-index:4;background:#fff;padding-top:2px}
 .nv-sheet-head h3{font-size:18px;margin:0;color:#222}
 .nv-sheet-close{margin-left:auto;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);
   background:#f7f8fa;color:#333;font-size:18px}
@@ -118,6 +118,7 @@ html.nv-panel-open #sidebar{box-shadow:none!important}
 #nv-rose-deg{position:absolute;left:50%;top:-28px;transform:translateX(-50%);padding:3px 12px;border-radius:16px;background:rgba(255,255,255,.92);font-weight:800;color:var(--accent);font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.16);line-height:1.2}
 #nv-weather-view{font-size:14px;color:#333;line-height:1.5}
 #nv-weather-view strong{color:var(--accent)}
+body.nv-sheet-open .nv-toast{display:none!important}
 .nv-toast{position:fixed;z-index:2000;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);
   transform:translateX(-50%);background:rgba(15,15,15,.92);color:#fff;padding:9px 14px;border-radius:20px;
   font-size:13px;max-width:88vw;text-align:center}
@@ -270,3 +271,34 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
 #nv-manual-add{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:auto;width:46px;height:46px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:26px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.28)}
 
 @media(min-width:900px){#nv-routeinfo{bottom:calc(78px + 68px)}}
+/* === Semáforo comun: naranja = se puede elegir, verde = elegido === */
+:root{--pick:#ff6a00;--pick-border:#ffd5b8;--pick-soft:#fff7f1;--pick-text:#c2410c;--sel:#2ecc71;--sel-ink:#063b1d}
+#nv-locate{border-color:var(--pick)!important}
+#nv-zoom button{border-color:rgba(255,106,0,.85)!important}
+#nv-close{border-color:var(--pick)!important;color:var(--pick-text)!important;background:var(--pick-soft)!important}
+.nv-sheet-close{border-color:var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
+.nv-choice button,.nv-radius button,.nv-secondary-row button,.nv-page-head .nv-mini,
+.nv-wp-head button,#tools-panel .tools-item,.nv-ri-actions button,.nv-primary,
+.nv-ri-main,.nv-point-card,.nv-wp-row button{
+  border-color:var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
+.nv-ri-main{border-radius:10px!important;padding:7px 8px!important}
+#nv-ri-calc,.nv-primary{background:var(--pick)!important;border-color:var(--pick)!important;color:#fff!important}
+#nv-ri-undo,#nv-ri-reset{border:1px solid var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
+.btn-pri{background:var(--pick)!important;border-color:var(--pick)!important;color:#fff!important}
+.btn-sec,.btn-red{background:var(--pick-soft)!important;border-color:var(--pick-border)!important;color:var(--pick-text)!important}
+.tab-btn.active{color:var(--pick-text)!important;border-bottom-color:var(--pick)!important}
+.btn-grp button,.map-layer-btn,.map-layer-toggle,.map-fit-btn,.stats-row .cp-btn{
+  border-color:var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
+.modal-close{color:var(--pick-text)!important}
+
+
+/* Elegido: verde */
+.nv-choice button.on,.nv-radius button.on,
+.btn-sec.active,.btn-grp button.active,.btn-grp button.active[data-v="m"],
+.map-layer-btn.active,.map-layer-toggle.active,.tab-btn.active,
+.nv-tab.active,.nv-tab.info.active,.nv-ring.green,
+.nv-ri-mini.on,#nv-ri-gps.on,#nv-record-btn.on{
+  border-color:var(--sel)!important;background:var(--sel)!important;color:var(--sel-ink)!important}
+.nv-tab.active .nv-tab-ico{color:var(--sel-ink)!important}
+.nv-ring.green{box-shadow:0 0 0 2px rgba(46,204,113,.32),0 2px 8px rgba(0,0,0,.25)!important}
+#nv-record-btn.on{background:#1e9e57!important;border-color:#1e9e57!important;color:#fff!important}
