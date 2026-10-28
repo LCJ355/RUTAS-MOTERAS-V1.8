@@ -21,7 +21,7 @@ assert.match(html, /searchTowns, searchFountains/);
 assert.match(html, /map, tileLayers/);
 assert.equal(manifest.version, '1.8.0');
 assert.equal(manifest.short_name, 'Rutas Moteras');
-assert.match(sw, /rutas-moteras-v1\.8-37/);
+assert.match(sw, /rutas-moteras-v1\.8-38/);
 
 for (const rel of [
   'native.css', 'native.js', 'server.js', 'sw.js', 'manifest.json',

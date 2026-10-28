@@ -1,5 +1,5 @@
 /* Rutas Moteras WEB-V1.8: shell y datos en caché; APIs y teselas siempre online. */
-const CACHE = 'rutas-moteras-v1.8-37';
+const CACHE = 'rutas-moteras-v1.8-38';
 const CORE = [
   './',
   './index.html',
@@ -20,7 +20,8 @@ const CORE = [
   './icon-192.png',
   './icon-512.png',
   './assets/hd_logo.png',
-  './assets/brujula_needle.png'
+  './assets/brujula_needle.png',
+  './assets/credito_moto.png'
 ];
 
 self.addEventListener('install', event => {

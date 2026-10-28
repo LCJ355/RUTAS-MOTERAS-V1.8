@@ -58,7 +58,7 @@ input,select,textarea{color:var(--text)!important}
 .nv-info-ico{width:24px;height:24px;display:block;margin:0 auto}
 #nv-sheet-credits .nv-primary{background:var(--pick);margin-top:12px}
 .nv-credits{background:linear-gradient(135deg,#ffa22b,#dd4e00);border-radius:20px;padding:20px 18px 18px;text-align:center;color:#fff;box-shadow:0 8px 24px rgba(221,78,0,.22)}
-.nv-credits-moto{font-size:48px;line-height:1}
+.nv-credits-photo{display:block;width:100%;height:190px;object-fit:cover;border-radius:14px;background:#fff;margin:0 auto 14px;box-shadow:0 4px 14px rgba(0,0,0,.16)}
 .nv-credits-kicker{font-size:12px;letter-spacing:2px;font-weight:800;color:#ffe7cc;margin-top:6px}
 .nv-credits-name{font-size:30px;line-height:1.1;font-weight:900;margin-top:3px}
 .nv-credits-rule{height:2px;background:rgba(255,255,255,.4);margin:14px 8px}
