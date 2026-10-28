@@ -101,8 +101,8 @@
       </div>
       <button id="nv-close" aria-label="Volver al mapa">←</button>
       <div id="nv-manual-pick" aria-hidden="true">
-        <div class="nv-cross-h"></div><div class="nv-cross-v"></div>
-        <div id="nv-manual-tag">SALIDA</div>
+        <div id="nv-manual-target" aria-hidden="true"></div>
+        <div id="nv-manual-tag"><span id="nv-manual-label">SALIDA</span><button id="nv-manual-cancel" aria-label="Cancelar selección manual">✕</button></div>
         <button id="nv-manual-add" aria-label="Fijar punto">＋</button>
       </div>
       <div id="nv-sheet-layers" class="nv-sheet">
@@ -514,12 +514,12 @@
     Object.keys(ids).forEach(k => $(ids[k])?.classList.toggle('on', nvManualTarget === k));
   }
   function startNvManual(target) {
-    const tag = $('#nv-manual-tag'), ov = $('#nv-manual-pick');
+    const tag = $('#nv-manual-label'), ov = $('#nv-manual-pick');
     if (!tag || !ov) return;
     nvManualTarget = nvManualTarget === target ? null : target;
     if (!nvManualTarget) { ov.classList.remove('show'); ov.setAttribute('aria-hidden', 'true'); syncManualBtns(); toast('Manual desactivado'); return; }
     tag.textContent = nvManualTarget === 'start' ? 'SALIDA' : nvManualTarget === 'dest' ? 'DESTINO' : 'PARADA';
-    routeInfoOpen = false; syncRouteInfo();
+    routeInfoOpen = false; syncRouteInfo(); markActive('map');
     ov.classList.add('show'); ov.setAttribute('aria-hidden', 'false'); syncManualBtns();
     toast('Mueve el mapa y pulsa + para fijar la ' + tag.textContent);
   }
@@ -550,7 +550,7 @@
     nvManualTarget = null; syncManualBtns();
     $('#nv-manual-pick')?.classList.remove('show');
     $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true');
-    routeInfoOpen = true; syncRouteInfo();
+    routeInfoOpen = true; syncRouteInfo(); markActive('map');
   }
   function clearNvManualMarks() {
     nvManualMarks.forEach(x => { try { window.map.removeLayer(x.mk); } catch (_) {} });
@@ -701,6 +701,7 @@
     $('#nv-ri-calc')?.addEventListener('click', () => { document.getElementById('btn-calc')?.click(); });
     $('#nv-ri-reset')?.addEventListener('click', () => { document.getElementById('btn-reset-route')?.click(); nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); syncManualBtns(); clearNvManualMarks(); syncRouteInfo(); });
     $('#nv-manual-add')?.addEventListener('click', nvConfirmManual);
+    $('#nv-manual-cancel')?.addEventListener('click', () => { nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true'); syncManualBtns(); markActive('map'); toast('Selección manual cancelada'); });
     $('#nv-record-btn')?.addEventListener('click', toggleNativeRecord);
     $('#nv-share-app')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share')?.click(); });
     $('#nv-share-wa')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share-wa')?.click(); });

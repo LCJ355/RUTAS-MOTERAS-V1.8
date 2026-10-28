@@ -279,11 +279,24 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
 .nv-manual-marker{font-size:26px;line-height:28px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
 #nv-manual-pick{position:fixed;inset:0;z-index:1300;display:none;pointer-events:none}
 #nv-manual-pick.show{display:block}
-.nv-cross-h,.nv-cross-v{position:absolute;background:rgba(255,106,0,.9);box-shadow:0 0 0 1px rgba(255,255,255,.7)}
-.nv-cross-h{left:50%;top:50%;width:66px;height:2px;transform:translate(-50%,-50%)}
-.nv-cross-v{left:50%;top:50%;width:2px;height:66px;transform:translate(-50%,-50%)}
-#nv-manual-tag{position:absolute;left:50%;top:calc(50% - 62px);transform:translateX(-50%);background:#fff7f1;color:#c2410c;border:1px solid #ffd5b8;border-radius:16px;padding:4px 12px;font-size:12px;font-weight:800;letter-spacing:1px}
-#nv-manual-add{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:auto;width:46px;height:46px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:26px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.28)}
+#nv-manual-target{position:absolute;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%);
+  border:3px solid var(--sel);border-radius:50%;background:
+  radial-gradient(circle,var(--sel) 0 3px,transparent 4px),
+  linear-gradient(var(--sel),var(--sel)) center/2px 38px no-repeat,
+  linear-gradient(var(--sel),var(--sel)) center/38px 2px no-repeat,
+  rgba(46,204,113,.10);
+  box-shadow:0 0 0 2px #fff,0 0 0 5px rgba(46,204,113,.35),0 6px 18px rgba(0,0,0,.22)}
+#nv-manual-target::after{content:"";position:absolute;inset:12px;border:2px solid rgba(255,255,255,.9);border-radius:50%}
+#nv-manual-tag{position:absolute;left:50%;top:calc(50% - 68px);transform:translateX(-50%);display:flex;align-items:center;gap:7px;
+  background:#fff;color:var(--sel-text);border:2px solid var(--sel);border-radius:18px;padding:3px 5px 3px 12px;
+  font-size:12px;font-weight:800;letter-spacing:1px;box-shadow:0 3px 12px rgba(0,0,0,.18)}
+#nv-manual-label{white-space:nowrap}
+#nv-manual-cancel{pointer-events:auto;width:24px;height:24px;border-radius:50%;border:1px solid var(--pick-border);
+  background:var(--pick-soft);color:var(--pick-text);font-size:13px;line-height:1;padding:0}
+#nv-manual-add{position:absolute;right:18px;top:50%;transform:translateY(-50%);pointer-events:auto;
+  width:54px;height:54px;border-radius:50%;border:3px solid #fff;background:var(--sel);color:#fff;
+  font-size:30px;font-weight:800;line-height:1;box-shadow:0 0 0 2px rgba(46,204,113,.4),0 6px 18px rgba(0,0,0,.28)}
+
 
 @media(min-width:900px){#nv-routeinfo{bottom:calc(78px + 68px)}}
 /* === Semáforo comun: naranja = se puede elegir, verde = elegido === */
