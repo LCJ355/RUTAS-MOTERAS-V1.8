@@ -1447,14 +1447,20 @@ function resetRouteCalc() {
 function resetRoute() {
   resetRouteCalc();
   startTown = null; endTown = null; waypoints = []; _wpSel = -1;
+  currentTown = ''; manualMode = false;
   startTownMarker?.remove(); endTownMarker?.remove(); startTownMarker = null; endTownMarker = null;
   routeLayer.clearLayers();
+  showAllFountains();
   $('#prov-start').value = ''; provChange('prov-start', 'town-start');
   $('#prov-end').value = ''; provChange('prov-end', 'town-end');
+  $('#prov-dest').value = ''; $('#town-dest').value = '';
   $('#btn-gps').classList.remove('gps-on'); $('#btn-gps-map')?.classList.remove('gps-on');
+  $('#btn-manual-map')?.classList.remove('active'); $('#btn-manual-map')?.setAttribute('aria-pressed', 'false');
   syncMm(); applyFilters(); renderList(); updSum();
-  $('#route-status').textContent = 'Ruta restablecida. Selecciona salida, destino y paradas.';
+  map.setView([37.3, -4.5], 8, { animate: false });
+  $('#route-status').textContent = 'Ruta restablecida. Mapa y fuentes de Andalucía.';
 }
+
 async function osrmRoute(coords, opts = {}) {
   const gen = ++routeGeneration;
   const ac = new AbortController(); _osrmAbort = ac;
@@ -2006,6 +2012,12 @@ $('#wp-del').addEventListener('click', () => wpDelete());
 $('#btn-saved-toggle').addEventListener('click', () => { const el = $('#saved-routes-panel'); const show = !el.style.display || el.style.display === 'none'; if (show) { renderSaved(); } else { el.style.display = 'none'; } });
 $('#btn-tools').addEventListener('click', e => { e.stopPropagation(); const sb = $('#sidebar'); if (sb.classList.contains('open')) { sb.classList.remove('open'); $('#btn-toggle-panel').textContent = '📋'; } const p = $('#tools-panel'); p.hidden = !p.hidden; });
 document.addEventListener('click', e => { const p = $('#tools-panel'); if (!p || p.hidden) return; const b = $('#btn-tools'); if (!p.contains(e.target) && !(b && b.contains(e.target))) p.hidden = true; });
+function showAllFountains() {
+  currentTown = ''; manualMode = false;
+  mcg.clearLayers();
+  markers.forEach(m => { if (!routeLayer.hasLayer(m)) mcg.addLayer(m); });
+  if (!map.hasLayer(mcg)) map.addLayer(mcg);
+}
 function applyFilters() { if (routing) return; if (manualMode) { mcg.clearLayers(); markers.forEach(m => { if (!routeLayer.hasLayer(m)) mcg.addLayer(m); }); if (!map.hasLayer(mcg)) map.addLayer(mcg); return; } if (!currentTown) { if (!map.hasLayer(mcg)) map.addLayer(mcg); return; } mcg.clearLayers(); markers.forEach(m => { if (routeLayer.hasLayer(m)) return; if (m._fd.p === currentTown) mcg.addLayer(m); }); if (!map.hasLayer(mcg)) map.addLayer(mcg); }
 
 /* === MODALES GENÉRICAS === */

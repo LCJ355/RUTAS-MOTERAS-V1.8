@@ -699,7 +699,7 @@
     $('#nv-ri-wp-manual')?.addEventListener('click', () => startNvManual('parada'));
     $('#nv-ri-undo')?.addEventListener('click', nvUndoRouteStep);
     $('#nv-ri-calc')?.addEventListener('click', () => { document.getElementById('btn-calc')?.click(); });
-    $('#nv-ri-reset')?.addEventListener('click', () => { document.getElementById('btn-reset-route')?.click(); nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); syncManualBtns(); clearNvManualMarks(); syncRouteInfo(); });
+    $('#nv-ri-reset')?.addEventListener('click', () => { document.getElementById('btn-reset-route')?.click(); nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); syncManualBtns(); clearNvManualMarks(); routeInfoOpen = false; syncRouteInfo(); markActive('map'); closeSheets(); });
     $('#nv-manual-add')?.addEventListener('click', nvConfirmManual);
     $('#nv-manual-cancel')?.addEventListener('click', () => { nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true'); syncManualBtns(); markActive('map'); toast('Selección manual cancelada'); });
     $('#nv-record-btn')?.addEventListener('click', toggleNativeRecord);
