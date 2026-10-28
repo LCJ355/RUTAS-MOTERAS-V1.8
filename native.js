@@ -38,7 +38,7 @@
           <button id="nv-weather" class="nv-ring nv-38" aria-label="Clima">🌦️</button>
         </div>
       </header>
-      <div id="nv-left"><button id="nv-mode" class="nv-ring nv-38" aria-label="Modo brújula">🎯</button></div>
+      <div id="nv-left"><button id="nv-mode" class="nv-ring nv-38" aria-label="Modo brújula"><svg class="nv-compass-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 3.8 15.2 12H8.8L12 3.8Z" fill="#ff6a00"/><path d="M12 20.2 L8.8 12 L15.2 12 Z" fill="#d8dee6"/><circle cx="12" cy="12" r="1.3" fill="#fff"/></svg></button></div>
       <div id="nv-rose" aria-hidden="true"><div id="nv-rose-deg">0°N</div><canvas id="nv-rose-canvas"></canvas></div>
       <div id="nv-zoom"><button id="nv-zoom-in" aria-label="Acercar">+</button><button id="nv-zoom-out" aria-label="Alejar">−</button></div>
       <button id="nv-locate" aria-label="Centrar en mi ubicación">📍</button>
@@ -943,13 +943,12 @@
     const rose = $('#nv-rose'); const btn = $('#nv-mode');
     rose.classList.toggle('show', compassOn);
     btn.classList.toggle('green', compassOn);
-    btn.textContent = compassOn ? '🧭' : '🎯';
     if (compassOn) { startHeading(); requestAnimationFrame(placeRoseOnMap); } else { stopHeading(); rose.style.visibility = 'hidden'; }
   }
   function startHeading() {
     const go = () => {
       if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission().then(r => { if (r !== 'granted') { toast('Permiso de brújula denegado'); compassOn = false; $('#nv-rose').classList.remove('show'); $('#nv-mode').textContent = '🎯'; return; } attachOrientation(); }).catch(() => toast('Brújula no disponible'));
+        DeviceOrientationEvent.requestPermission().then(r => { if (r !== 'granted') { toast('Permiso de brújula denegado'); compassOn = false; $('#nv-rose').classList.remove('show'); return; } attachOrientation(); }).catch(() => toast('Brújula no disponible'));
       } else attachOrientation();
     };
     go();
