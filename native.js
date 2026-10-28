@@ -133,15 +133,15 @@
         <div id="nv-profile-chart" class="nv-profile-chart"></div>
       </div>
       <div id="nv-sheet-credits" class="nv-sheet">
-        <div class="nv-sheet-head"><h3>Créditos · Nativa V-1.8</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
+        <div class="nv-sheet-head"><h3>Créditos · Rutas Moteras - Fuentes de Andalucía V-1.8</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div class="nv-credits">
           <img class="nv-credits-photo" src="assets/hd_logo.png" alt="Harley-Davidson">
           <div class="nv-credits-kicker">IDEA ORIGINAL DE</div>
           <div class="nv-credits-name">LUCIANO CJ</div>
           <div class="nv-credits-rule"></div>
           <div class="nv-credits-quote">“No me copies sino es para mejorarme”</div>
-          <div class="nv-credits-meta">Rutas Moteras -Fuentes de Andalucía- · 13.719 fuentes</div>
-          <div class="nv-credits-meta">Versión nativa V-1.8 · Android Kotlin + osmdroid</div>
+          <div class="nv-credits-meta">Rutas Moteras - Fuentes de Andalucía V-1.8 · 13.719 fuentes</div>
+          <div class="nv-credits-meta">Android Kotlin + osmdroid</div>
         </div>
         <button class="nv-primary" id="nv-credits-close">ACEPTAR</button>
       </div>
