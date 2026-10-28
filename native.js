@@ -135,7 +135,7 @@
       <div id="nv-sheet-credits" class="nv-sheet">
         <div class="nv-sheet-head"><h3>Créditos · Nativa V-1.8</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div class="nv-credits">
-          <img class="nv-credits-photo" src="assets/credito_moto.png" alt="Harley-Davidson">
+          <img class="nv-credits-photo" src="assets/hd_logo.png" alt="Harley-Davidson">
           <div class="nv-credits-kicker">IDEA ORIGINAL DE</div>
           <div class="nv-credits-name">LUCIANO CJ</div>
           <div class="nv-credits-rule"></div>
