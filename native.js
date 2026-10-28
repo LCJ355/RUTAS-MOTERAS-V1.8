@@ -39,7 +39,7 @@
       <div id="nv-left"><button id="nv-mode" class="nv-ring nv-38" aria-label="Modo brújula">🎯</button></div>
       <div id="nv-rose" aria-hidden="true"><div id="nv-rose-deg">0°N</div><canvas id="nv-rose-canvas"></canvas></div>
       <div id="nv-zoom"><button id="nv-zoom-in" aria-label="Acercar">+</button><button id="nv-zoom-out" aria-label="Alejar">−</button></div>
-      <button id="nv-locate" aria-label="Centrar en mi ubicación">🎯</button>
+      <button id="nv-locate" aria-label="Centrar en mi ubicación">📍</button>
       <div id="nv-routebar">
         <button class="nv-nav" id="nv-nav" aria-label="Seguir ruta">▲</button>
         <div class="nv-route-main" id="nv-route-main"><strong id="nv-route-title">Ruta</strong><small id="nv-route-sub">Pulsa para ver detalles</small></div>
@@ -624,11 +624,9 @@
       ctx.fillStyle = a === 0 ? '#ff6a00' : '#e3e9ef'; ctx.fillText(txt, Math.cos(rad) * rr, Math.sin(rad) * rr);
     });
     ctx.shadowBlur = 0;
-    // Aguja clásica: el rojo marca el rumbo; a 0° queda al norte.
-    ctx.save(); ctx.rotate(heading * Math.PI / 180);
+    // Aguja clásica: rojo siempre al norte; el rumbo se marca en el aro.
     ctx.beginPath(); ctx.moveTo(0, -R * .46); ctx.lineTo(8 * dpr, 4 * dpr); ctx.lineTo(0, 0); ctx.lineTo(-8 * dpr, 4 * dpr); ctx.closePath();
     ctx.fillStyle = '#e53935'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, R * .46); ctx.lineTo(8 * dpr, -4 * dpr); ctx.lineTo(0, 0); ctx.lineTo(-8 * dpr, -4 * dpr); ctx.closePath(); ctx.fillStyle = '#1976d2'; ctx.fill();
-    ctx.restore();
     const hrad = (heading - 90) * Math.PI / 180;
     ctx.beginPath(); ctx.moveTo(Math.cos(hrad) * (R - 2 * dpr), Math.sin(hrad) * (R - 2 * dpr));
     ctx.lineTo(Math.cos(hrad - .035) * (R - 15 * dpr), Math.sin(hrad - .035) * (R - 15 * dpr));
