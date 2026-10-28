@@ -311,7 +311,6 @@ html.menu-open #sidebar{padding-bottom:max(env(safe-area-inset-bottom,0px),var(-
 </style>
 <meta name="application-name" content="Rutas Moteras">
 <script>document.documentElement.dataset.mobileApp='true';document.addEventListener('DOMContentLoaded',()=>{const moveSettings=()=>{if(!window.__rutasMoterasReady){setTimeout(moveSettings,50);return;}const tab=document.getElementById('tab-ajustes'),panel=document.getElementById('panel-ajustes'),credit=panel?.querySelector('.legal-links > span'),route=document.getElementById('route-info');if(credit&&route){const footer=document.createElement('div');footer.className='legal-links';footer.appendChild(credit);route.appendChild(footer);}tab?.remove();panel?.remove();};moveSettings();});</script>
-<style>html[data-mobile-app="true"] #admin-settings,html[data-mobile-app="true"] #save-photos-row,html[data-mobile-app="true"] #save-access-row{display:none!important}</style>
 <link rel="stylesheet" href="native.css">
 </head>
 <body>
@@ -422,28 +421,8 @@ html.menu-open #sidebar{padding-bottom:max(env(safe-area-inset-bottom,0px),var(-
 </div>
 </div>
 <div class="tab-panel" id="panel-ajustes" role="tabpanel" aria-labelledby="tab-ajustes" tabindex="0" data-tab="ajustes">
-<div class="lbl" style="margin-top:0">⚙️ CONFIGURACIÓN Y SINCRONIZACIÓN</div>
-<details id="admin-settings" style="margin-top:5px;font-size:.68rem;color:var(--muted)">
-<summary style="cursor:pointer;padding:4px;color:var(--text);font-size:.72rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔐 Configuración GitHub</summary>
-<div style="margin-top:5px">
-<input id="github-token" type="password" placeholder="Token clásico GitHub (scope repo)" aria-label="Token clásico de GitHub (scope repo)" style="width:100%;padding:5px;font-size:.68rem;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);margin-bottom:3px">
-<div style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap">
-<span id="github-token-status" style="color:var(--muted);font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔑 No configurado</span>
-<button class="btn btn-sec btn-sm" onclick="saveGithubToken()" style="font-size:.55rem;flex:none;min-width:44px" aria-label="Guardar token GitHub">Guardar</button>
-<button class="btn btn-sec btn-sm" onclick="clearGithubToken()" style="font-size:.55rem;flex:none;min-width:44px" aria-label="Eliminar token">Eliminar</button>
-</div>
-</div>
-<hr style="border:none;border-top:1px solid var(--border);margin:6px 0">
-<button class="btn btn-red btn-sm" id="btn-reset-all" onclick="resetAllConfirm()" style="width:100%;font-size:.6rem;padding:4px">🗑 Reset completo</button>
-</details>
-<div class="row" style="gap:4px;margin-top:5px;flex-wrap:nowrap" id="save-photos-row">
-<span id="save-photos-status" style="font-size:.62rem;color:var(--sec);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
-<button class="btn btn-sm" id="btn-save-photos" style="display:none;background:var(--warn);color:#fff;border:none;border-radius:4px;padding:5px 8px;cursor:pointer;font-weight:600;font-size:.65rem;animation:blink 1s ease-in-out 6;flex:none" onclick="exportPhotosToFile()" aria-label="Publicar fotos en repositorio">📸 Publicar fotos</button>
-</div>
-<div class="row" style="gap:4px;margin-top:3px;flex-wrap:nowrap" id="save-access-row">
-<span id="save-access-status" style="font-size:.62rem;color:var(--sec);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
-<button class="btn btn-sm" id="btn-save-access" style="display:none;background:var(--accent);color:#0d1117;border:none;border-radius:4px;padding:5px 8px;cursor:pointer;font-weight:600;font-size:.65rem;animation:blink 1s ease-in-out 6;flex:none" onclick="exportAccessToFile()" aria-label="Publicar cambios de acceso en repositorio">🚧 Publicar accesos</button>
-</div>
+<div class="lbl" style="margin-top:0">DATOS LOCALES</div>
+<button class="btn btn-red btn-sm" id="btn-reset-all" onclick="resetAllConfirm()" style="width:100%;font-size:.6rem;padding:4px;margin-top:5px">🗑️ Reset completo</button>
 <div style="text-align:center;margin:8px 0">
   <button class="btn btn-sec btn-sm" id="btn-traffic-dgt" style="width:100%">🚦 Tráfico DGT en tiempo real</button>
 </div>
@@ -647,7 +626,7 @@ const safeLS = {
   remove: k => { try { localStorage.removeItem(k); _ovRemove(k); } catch { } },
   keys: () => { try { const out = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k !== null) out.push(k); } return out; } catch { return []; } }
 };
-const KEYS = { migrated: 'rm:migration:v2', cookie: 'rm:cookie-accepted', routes: 'rm:routes', token: 'rm:github-token' };
+const KEYS = { migrated: 'rm:migration:v2', cookie: 'rm:cookie-accepted', routes: 'rm:routes' };
 const idKey = (type, id) => 'rm:' + type + ':' + id;
 function buildOverrideIndex() { for (const type in _ovIndex) _ovIndex[type] = {}; safeLS.keys().forEach(k => { if (k.indexOf('rm:') === 0) _ovSet(k, safeLS.get(k)); }); }
 function migrateLegacyStorage() {
@@ -1019,84 +998,20 @@ function getCaption(id) {
 }
 function getNote(id) { const ov = _ovIndex.note[id]; if (ov === _OV_DEL) return ''; return ov !== undefined ? ov : ''; }
 function updateSaveStatus() {
-  const el = $('#save-photos-status'); const btn = $('#btn-save-photos');
-  if (!el || !btn) return;
-  const unsaved = photoOverrideCount() + capOverrideCount();
-  const totalPub = Object.keys(_publishedPhotos).length;
-  if (unsaved > 0) {
-    el.innerHTML = `<span class="blink" style="color:var(--accent);font-weight:700">📷 ${unsaved} cambio${unsaved > 1 ? 's' : ''} en fotos/leyendas sin publicar</span>`;
-    btn.style.display = 'inline-block';
-  } else {
-    el.textContent = totalPub ? `📷 ${totalPub} fotos publicadas` : '📷 Sin fotos';
-    btn.style.display = 'none';
-  }
+  const el = $('#save-photos-status');
+  if (el) el.textContent = 'Fotos y leyendas guardadas solo en este dispositivo';
 }
-async function saveGithubToken() {
-  const v = $('#github-token').value.trim();
-  if (!v) { $('#github-token-status').textContent = '❌ Token vacío'; return; }
-  if (!(await askConfirm('⚠️ El token se guardará en sessionStorage (se borra al cerrar el navegador).\n\nSi alguien accede a tu dispositivo, podrá modificar tu repositorio.\n\n¿Continuar?'))) return;
-  try { sessionStorage.setItem(KEYS.token, v); } catch (e) { $('#github-token-status').textContent = '❌ No se pudo guardar'; return; }
-  $('#github-token-status').textContent = '✅ Token guardado (sesión)';
-  toast('🔑 Token guardado (sesión)');
-}
-function clearGithubToken() { try { sessionStorage.removeItem(KEYS.token); } catch (e) {} $('#github-token').value = ''; $('#github-token-status').textContent = '🔑 No configurado'; toast('🔑 Token eliminado'); }
-function getGithubToken() { try { return sessionStorage.getItem(KEYS.token) || ''; } catch (e) { return ''; } }
 function isMobileApp() { return document.documentElement.dataset.mobileApp === 'true'; }
-function canEditPhotos() { return isMobileApp() || !!getGithubToken(); }
+function canEditPhotos() { return true; }
 
-async function exportPhotosToFile() {
-  const { ph, cap } = mergedPhotoState();
-  const js = 'window.__PHOTO_ID_VERSION=2;window.__PHOTOS=' + JSON.stringify(ph) + ';window.__CAPTIONS=' + JSON.stringify(cap) + ';';
-  const token = getGithubToken();
-  const el = $('#route-status');
-  if (token) {
-    el.textContent = '⏳ Publicando fotos en GitHub...';
-    setLoading(true);
-    try { await publishToGithub(js); afterPhotoPublish(); } catch (e) { toast('❌ Error al publicar: ' + e.message, 'warn'); }
-    finally { setLoading(false); }
-    return;
-  }
-  const blob = new Blob([js], { type: 'text/javascript' });
-  const url = URL.createObjectURL(blob); const a = document.createElement('a');
-  a.href = url; a.download = 'photos_data.js'; a.click(); URL.revokeObjectURL(url);
-  el.innerHTML = '✅ ' + Object.keys(ph).length + ' fotos exportadas — 📸 <span class="blink" style="color:var(--accent);font-weight:700">Sube photos_data.js a GitHub</span>';
-  updateSaveStatus();
-}
-function afterPhotoPublish() {
-  const { ph, cap } = mergedPhotoState();
-  _publishedPhotos = Object.freeze(ph); _publishedCaptions = Object.freeze(cap);
-  clearOverrides('photo'); clearOverrides('caption');
-  updateSaveStatus();
-}
-function clearOverrides(prefix) {
-  Object.keys(_ovIndex[prefix] || {}).forEach(id => { safeLS.remove(idKey(prefix, id)); safeLS.remove(idKey(prefix, id) + '-del'); });
-}
 function resetLocalData() {
   safeLS.keys().forEach(k => { if (k.indexOf('rm:') === 0) safeLS.remove(k); });
   for (const t in _ovIndex) _ovIndex[t] = {};
-  try { sessionStorage.removeItem(KEYS.token); } catch { }
+
   _publishedPhotos = Object.freeze({}); _publishedCaptions = Object.freeze({}); _publishedAccess = Object.freeze({});
   invalidateRoute({ clearManual: true, clearStatus: true });
   renderList(); updateSaveStatus(); updateAccessStatus(); syncMm();
   toast('🗑 Datos locales borrados');
-}
-
-async function publishToGithub(content, path, msg) {
-  const { owner, repo } = CONFIG.GH;
-  path = path || CONFIG.GH.path; msg = msg || '📸 Actualizar fotos';
-  const token = getGithubToken();
-  const ghOpts = (method) => ({ method, headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' } });
-  const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 20000);
-  try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { ...ghOpts('GET'), signal: ac.signal });
-    if (!res.ok && res.status !== 404) throw new Error(`GitHub API ${res.status}`);
-    const sha = res.status === 200 ? (await res.json().catch(() => null))?.sha : undefined;
-    const base64 = btoa(new TextEncoder().encode(content).reduce((s, b) => s + String.fromCharCode(b), ''));
-    const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { ...ghOpts('PUT'), signal: ac.signal, body: JSON.stringify({ message: msg, content: base64, sha }) });
-    if (putRes.status === 409 || putRes.status === 422) { let em = ''; try { em = (await putRes.json()).message || ''; } catch { } throw new Error('Conflicto con el repositorio: ' + (em || 'SHA desactualizado, recarga y reintenta')); }
-    if (!putRes.ok) { let em = 'Error desconocido'; try { em = (await putRes.json()).message || em; } catch { } throw new Error(em); }
-    toast('✅ Publicado: ' + path); $('#github-token-status').textContent = '✅ Publicado';
-  } finally { clearTimeout(timer); }
 }
 
 function loadPhotosFile() {
@@ -1127,40 +1042,8 @@ function loadAccessFile() {
 }
 
 function updateAccessStatus() {
-  const el = $('#save-access-status'); const btn = $('#btn-save-access');
-  if (!el || !btn) return;
-  const unsaved = accOverrideCount();
-  const totalPub = Object.keys(_publishedAccess).length;
-  if (unsaved > 0) {
-    el.innerHTML = `<span class="blink" style="color:var(--accent);font-weight:700">🚧 ${unsaved} cambio${unsaved > 1 ? 's' : ''} de acceso sin publicar</span>`;
-    btn.style.display = 'inline-block';
-  } else {
-    el.textContent = totalPub ? `🚧 ${totalPub} accesos publicados` : '🚧 Sin cambios de acceso';
-    btn.style.display = 'none';
-  }
-}
-async function exportAccessToFile() {
-  const js = 'window.__ACCESS_ID_VERSION=2;window.__ACCESS=' + JSON.stringify(mergedAccessState()) + ';';
-  const token = getGithubToken();
-  const el = $('#route-status');
-  if (token) {
-    el.textContent = '⏳ Publicando accesos en GitHub...';
-    setLoading(true);
-    try { await publishToGithub(js, 'access_data.js', '🚧 Actualizar accesos'); afterAccessPublish(); }
-    catch (e) { toast('❌ Error al publicar: ' + e.message, 'warn'); }
-    finally { setLoading(false); }
-    return;
-  }
-  const blob = new Blob([js], { type: 'text/javascript' });
-  const url = URL.createObjectURL(blob); const a = document.createElement('a');
-  a.href = url; a.download = 'access_data.js'; a.click(); URL.revokeObjectURL(url);
-  el.innerHTML = '✅ Accesos exportados — 🚧 <span class="blink" style="color:var(--accent);font-weight:700">Sube access_data.js a GitHub</span>';
-  updateAccessStatus();
-}
-function afterAccessPublish() {
-  _publishedAccess = Object.freeze(mergedAccessState());
-  clearOverrides('access');
-  updateAccessStatus();
+  const el = $('#save-access-status');
+  if (el) el.textContent = 'Accesos guardados solo en este dispositivo';
 }
 function readBlob(blob) {
   const fr = new FileReader();
@@ -1184,7 +1067,7 @@ function compressAndSet(idx, dataUrl) {
   img.onerror = () => toast('⚠️ No se puede cargar la imagen', 'warn');
   img.src = dataUrl;
 }
-function focusPaste() { if (!getGithubToken()) return; if (!_pasteTarget) initPhotoInput(); _pasteTarget.focus(); }
+function focusPaste() { if (!_pasteTarget) initPhotoInput(); _pasteTarget.focus(); }
 function setPhoto(id, dataUrl) {
   try {
     const lsOK = safeLS.set(idKey('photo', id), dataUrl);
@@ -1195,7 +1078,7 @@ function setPhoto(id, dataUrl) {
     if (mm[id]?.isPopupOpen()) updPop(mm[id]);
     toast('✅ Foto guardada (' + (dataUrl.length / 1024).toFixed(0) + ' KB)');
     updateSaveStatus();
-    if (getGithubToken()) $('#route-status').innerHTML = '✅ Foto guardada — <span class="blink" style="color:var(--accent);font-weight:700">📸 Pulsa "Publicar fotos"</span>'; else $('#route-status').textContent = '✅ Foto guardada en este móvil';
+    $('#route-status').textContent = '✅ Foto guardada solo en este dispositivo';
   } catch (e) { toast('⚠️ Error guardar: ' + e.message, 'warn'); }
 }
 function deletePhoto(id) {
@@ -1238,13 +1121,12 @@ function updPop(mk) {
   if (startTownMarker?._fd && startTownMarker._fd.id === id) h += '<button class="btn btn-sec btn-sm" disabled>🏁 Inicio</button>';
   else if (endTownMarker?._fd && endTownMarker._fd.id === id) h += '<button class="btn btn-sec btn-sm" disabled>🎯 Destino</button>';
   else h += `<button class="btn btn-sec btn-sm" onclick="toggleWp(FD.find(x=>x.id===${id}))">➕ Parada</button>`;
-  if (getGithubToken()) h += `<button class="btn btn-sec btn-sm" onclick="cycleAcc(FD.find(x=>x.id===${id}))">🚧 Acceso: ${aLbl(getAccType(f))}</button>`;
+  h += `<button class="btn btn-sec btn-sm" onclick="cycleAcc(FD.find(x=>x.id===${id}))">🚧 Acceso: ${aLbl(getAccType(f))}</button>`;
   if (canEditPhotos()) {
     h += photoPickerButtons(id);
     if (photo) h += `<button class="btn btn-red btn-sm" onclick="deletePhoto(${id})">❌</button>`;
     if (photo) h += `<button class="btn btn-sec btn-sm" onclick="editCaption(${id})">✏️ Leyenda</button>`;
   }
-  if (getGithubToken()) h += `<button class="btn btn-sec btn-sm" onclick="exportPhotosToFile()">📸 Publicar</button>`;
   h += `<a href="https://www.google.com/maps?q=${f.la},${f.lo}" target="_blank" rel="noopener" style="text-decoration:none"><button class="btn btn-sec btn-sm">🗺️ Maps</button></a>`;
   const waText = encodeURIComponent(`${f.n} · ${f.p} (Andalucía)`);
   h += `<a href="https://wa.me/?text=${waText}%20📍${f.la.toFixed(4)},${f.lo.toFixed(4)}" target="_blank" rel="noopener" style="text-decoration:none"><button class="btn btn-sec btn-sm">💬 WhatsApp</button></a>`;
@@ -1332,7 +1214,7 @@ function renderList() {
       if (n !== null) { if (n) { safeLS.set(idKey('note', id), n); } else { safeLS.remove(idKey('note', id)); } renderList(); mm[id]?.isPopupOpen() && updPop(mm[id]); }
     });
     const a = document.createElement('div'); a.style.display = 'flex'; a.style.gap = '3px'; a.appendChild(bw); a.appendChild(bn);
-    if (getGithubToken()) {
+    if (true) {
       const ba = document.createElement('button'); ba.className = 'fi-btn ac'; ba.textContent = accBtnTxt(getAccType(x)); ba.title = 'Cambiar tipo de acceso';
       ba.addEventListener('click', e => { e.stopPropagation(); cycleAcc(x); });
       a.appendChild(ba);
@@ -2053,7 +1935,7 @@ document.addEventListener('keydown', function (e) {
 });
 
 /* === LEGAL Y FOCUS TRAP === */
-(function () { if (!safeLS.get(KEYS.cookie)) $('#cookie-banner').style.display = 'block'; $('#cb-accept').addEventListener('click', () => { safeLS.set(KEYS.cookie, '1'); $('#cookie-banner').style.display = 'none'; }); const lt = { aviso: '<h2>Aviso Legal</h2><p><strong>Responsable:</strong> Propietario de esta web (aficionado, sin ánimo de lucro).</p><p><strong>Finalidad:</strong> Planificación de rutas moteras por fuentes de Andalucía.</p><p><strong>Propiedad intelectual:</strong> Datos del inventario público "Inventario_Fuentes_Cadiz_Completo". Código de uso libre.</p><p><strong>Exención de responsabilidad:</strong> El usuario es responsable de cumplir con la normativa de tráfico y medio ambiente. El responsable no se hace responsable de daños derivados del uso de esta web.</p><p><strong>Legislación:</strong> Ley 34/2002 LSSI-CE.</p>', privacidad: '<h2>Política de Privacidad (RGPD)</h2><p>Esta web <strong>no recopila ni comparte datos personales</strong> en servidores externos.</p><h3>Datos locales</h3><p>Usamos localStorage del navegador para guardar:<br>• Fotos que añadas a las fuentes<br>• Notas personales<br>• Rutas guardadas<br>• Preferencia de cookies</p><p>Estos datos permanecen en tu dispositivo y puedes borrarlos desde la configuración del navegador. Si publicas fotos o leyendas (con token de GitHub), esas fotos y leyendas se hacen públicas en el repositorio de esta web.</p><h3>Terceros</h3><p>Consultamos APIs públicas gratuitas (OSRM, Open-Elevation, Overpass, Open-Meteo) que pueden registrar tu IP según sus propias políticas.</p><h3>Tus derechos</h3><p>Acceso, rectificación, supresión: borra los datos locales desde el navegador.</p>', cookies: '<h2>Política de Cookies</h2><p>Usamos <strong>localStorage</strong> como equivalente técnico a cookies:</p><h3>Necesario</h3><p>• <strong>rm:cookie-accepted</strong>: guarda si aceptaste el aviso</p><h3>Funcional</h3><p>• <strong>rm:photo:&lt;id&gt;</strong> y <strong>rm:caption:&lt;id&gt;</strong>: fotos y leyendas de fuentes (por id)<br>• <strong>rm:note:&lt;id&gt;</strong>: notas personales por fuente<br>• <strong>rm:routes</strong>: rutas guardadas<br>• <strong>rm:access:&lt;id&gt;</strong>: tipo de acceso por fuente</p><p>Puedes eliminar estos datos desde Configuración del navegador → Borrar datos locales.</p>' }; function showLegal(id) { $('#legal-body').innerHTML = lt[id]; openModal('legal-modal'); setTimeout(() => $('#legal-modal .modal-content').focus(), 10); } function trapFocus(e) { const focusable = $('#legal-modal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); const first = focusable[0]; const last = focusable[focusable.length - 1]; if (e.key === 'Tab') { if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } } } $('#link-legal').addEventListener('click', e => { e.preventDefault(); showLegal('aviso'); }); $('#link-privacy').addEventListener('click', e => { e.preventDefault(); showLegal('privacidad'); }); $('#link-cookies').addEventListener('click', e => { e.preventDefault(); showLegal('cookies'); }); $('#cb-info').addEventListener('click', () => showLegal('cookies')); $('#legal-modal').addEventListener('keydown', trapFocus); $('#cookie-banner').addEventListener('keydown', e => { if (e.key === 'Escape') $('#cb-accept').click(); }); })();
+(function () { if (!safeLS.get(KEYS.cookie)) $('#cookie-banner').style.display = 'block'; $('#cb-accept').addEventListener('click', () => { safeLS.set(KEYS.cookie, '1'); $('#cookie-banner').style.display = 'none'; }); const lt = { aviso: '<h2>Aviso Legal</h2><p><strong>Responsable:</strong> Propietario de esta web (aficionado, sin ánimo de lucro).</p><p><strong>Finalidad:</strong> Planificación de rutas moteras por fuentes de Andalucía.</p><p><strong>Propiedad intelectual:</strong> Datos del inventario público "Inventario_Fuentes_Cadiz_Completo". Código de uso libre.</p><p><strong>Exención de responsabilidad:</strong> El usuario es responsable de cumplir con la normativa de tráfico y medio ambiente. El responsable no se hace responsable de daños derivados del uso de esta web.</p><p><strong>Legislación:</strong> Ley 34/2002 LSSI-CE.</p>', privacidad: '<h2>Política de Privacidad (RGPD)</h2><p>Esta web <strong>no recopila ni comparte datos personales</strong> en servidores externos.</p><h3>Datos locales</h3><p>Usamos localStorage del navegador para guardar:<br>• Fotos que añadas a las fuentes<br>• Notas personales<br>• Rutas guardadas<br>• Preferencia de cookies</p><p>Estos datos permanecen en tu dispositivo y puedes borrarlos desde la configuración del navegador. No se publican fotos, leyendas, notas ni accesos en GitHub ni en servidores externos.</p><h3>Terceros</h3><p>Consultamos APIs públicas gratuitas (OSRM, Open-Elevation, Overpass, Open-Meteo) que pueden registrar tu IP según sus propias políticas.</p><h3>Tus derechos</h3><p>Acceso, rectificación, supresión: borra los datos locales desde el navegador.</p>', cookies: '<h2>Política de Cookies</h2><p>Usamos <strong>localStorage</strong> como equivalente técnico a cookies:</p><h3>Necesario</h3><p>• <strong>rm:cookie-accepted</strong>: guarda si aceptaste el aviso</p><h3>Funcional</h3><p>• <strong>rm:photo:&lt;id&gt;</strong> y <strong>rm:caption:&lt;id&gt;</strong>: fotos y leyendas de fuentes (por id)<br>• <strong>rm:note:&lt;id&gt;</strong>: notas personales por fuente<br>• <strong>rm:routes</strong>: rutas guardadas<br>• <strong>rm:access:&lt;id&gt;</strong>: tipo de acceso por fuente</p><p>Puedes eliminar estos datos desde Configuración del navegador → Borrar datos locales.</p>' }; function showLegal(id) { $('#legal-body').innerHTML = lt[id]; openModal('legal-modal'); setTimeout(() => $('#legal-modal .modal-content').focus(), 10); } function trapFocus(e) { const focusable = $('#legal-modal').querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); const first = focusable[0]; const last = focusable[focusable.length - 1]; if (e.key === 'Tab') { if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } } } $('#link-legal').addEventListener('click', e => { e.preventDefault(); showLegal('aviso'); }); $('#link-privacy').addEventListener('click', e => { e.preventDefault(); showLegal('privacidad'); }); $('#link-cookies').addEventListener('click', e => { e.preventDefault(); showLegal('cookies'); }); $('#cb-info').addEventListener('click', () => showLegal('cookies')); $('#legal-modal').addEventListener('keydown', trapFocus); $('#cookie-banner').addEventListener('keydown', e => { if (e.key === 'Escape') $('#cb-accept').click(); }); })();
 
 /* === INICIALIZACIÓN === */
 $('#route-status').textContent = 'Selecciona salida, destino y paradas';
@@ -2091,11 +1973,12 @@ $$('.tab-btn').forEach(btn => {
 });
 // D: close panel on fountain select (mobile)
 document.addEventListener('click', function(e) { const fi = e.target.closest('.fi'); if (fi && window.innerWidth <= 768) { const sb = $('#sidebar'); sb.classList.remove('open'); $('#btn-toggle-panel').textContent = '📋'; } });
-parseHash(); loadPhotosFile(); loadAccessFile(); updateAccessStatus(); const ghToken = getGithubToken(); if (ghToken) { const gt = $('#github-token'); if (gt) gt.value = ghToken; const gts = $('#github-token-status'); if (gts) gts.textContent = '✅ Token configurado'; }
+try { localStorage.removeItem('rm:github-token'); sessionStorage.removeItem('rm:github-token'); } catch { }
+parseHash(); loadPhotosFile(); loadAccessFile(); updateAccessStatus();
 renderList(); updSum(); if (mcg.getLayers().length > 0) try { map.fitBounds(mcg.getBounds().pad(0.08)); } catch {} renderSaved(); updateSaveStatus();
 
-/* === EXPONER HELPERS A window (para onclick inline de popups / GitHub / reset / GPX) === */
-Object.assign(window, { safeLS, toast, renderList, updateSaveStatus, updateAccessStatus, setStart, setEnd, toggleWp, cycleAcc, photoClick, deletePhoto, editCaption, updPop, exportPhotosToFile, exportAccessToFile, getPhoto, getCaption, getAccType, aLbl, saveGithubToken, clearGithubToken, getGithubToken, resetLocalData, resetAllConfirm, mm, FD, map, tileLayers, getPos, fountainId, startTown, endTown, waypoints, POSTAL_DATA, syncMm, updSum, invalidateRoute, openModal, searchTowns, searchFountains, setDestino, showFountainOnMap, setLayer, openMapSearch, closeMapSearch, selectTab, togglePanel, getWeather });
+/* === EXPONER HELPERS A window (para onclick inline de popups / reset / GPX) === */
+Object.assign(window, { safeLS, toast, renderList, updateSaveStatus, updateAccessStatus, setStart, setEnd, toggleWp, cycleAcc, photoClick, deletePhoto, editCaption, updPop, getPhoto, getCaption, getAccType, aLbl, resetLocalData, resetAllConfirm, mm, FD, map, tileLayers, getPos, fountainId, startTown, endTown, waypoints, POSTAL_DATA, syncMm, updSum, invalidateRoute, openModal, searchTowns, searchFountains, setDestino, showFountainOnMap, setLayer, openMapSearch, closeMapSearch, selectTab, togglePanel, getWeather });
 Object.defineProperties(window, {
   startTown: { get() { return startTown; }, set(v) { startTown = v; }, configurable: true },
   endTown: { get() { return endTown; }, set(v) { endTown = v; }, configurable: true },

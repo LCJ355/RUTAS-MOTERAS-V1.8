@@ -178,11 +178,6 @@
       window.map.on('move zoom resize', placeRoseOnMap);
     }
     const tools = document.getElementById('tools-panel');
-    if (tools && !document.getElementById('nv-publish-photos')) {
-      tools.insertAdjacentHTML('beforeend', '<button class="tools-item" id="nv-publish-photos">📸 Publicar fotos</button><button class="tools-item" id="nv-publish-access">🔓 Publicar accesos</button>');
-      document.getElementById('nv-publish-photos').addEventListener('click', () => { if (window.exportPhotosToFile) window.exportPhotosToFile(); });
-      document.getElementById('nv-publish-access').addEventListener('click', () => { if (window.exportAccessToFile) window.exportAccessToFile(); });
-    }
     bindShell();
     observePanel();
     initGpsTriangle();

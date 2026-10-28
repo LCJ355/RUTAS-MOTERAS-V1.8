@@ -23,7 +23,7 @@ El `manifest.json` y el Service Worker usan rutas relativas para funcionar en la
 
 ## Base reutilizada
 
-- Motor funcional móvil del APK **3.39** (`index.html`): fuentes, filtros, búsqueda, rutas OSRM, elevación, GPX, POI, clima, fotos, notas, accesos, copias de seguridad y publicación GitHub.
+- Motor funcional móvil del APK **3.39** (`index.html`): fuentes, filtros, búsqueda, rutas OSRM, elevación, GPX, POI, clima, fotos, notas, accesos y copias de seguridad. Todos los datos son locales: no se publica nada en GitHub.
 - Datos actuales de `WEB-V3.40`: 13.719 fuentes, 810 pueblos/pedanías y 790 códigos postales.
 - Carcasa nueva `native.css` + `native.js`: top bar, buscador nativo, capas, clima, brújula, diana, zoom, barra de ruta y cinco botones inferiores.
 - Iconos y aguja de la app nativa copiados a `assets/`.
