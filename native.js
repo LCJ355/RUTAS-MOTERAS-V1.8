@@ -70,7 +70,7 @@
           <div id="nv-route-wps"></div>
           <div id="nv-route-page-summary">Define salida y destino para calcular la ruta.</div>
           <button class="nv-primary" id="nv-calc-page">Calcular ruta</button>
-          <div class="nv-secondary-row"><button id="nv-gps-route">🎯 GPS</button><button id="nv-manual-route">✋ Manual</button><button id="nv-weather-route">🌦️ Clima</button></div>
+          <div class="nv-secondary-row"><button id="nv-gps-route">🎯 GPS</button><button id="nv-manual-route">✋ Manual</button><button id="nv-weather-route-page">🌦️ Clima</button></div>
           <div class="nv-secondary-row"><button id="nv-poi-route">📍 POIs</button><button id="nv-gpx-route">🧭 GPX</button><button id="nv-traffic-route">🚦 Tráfico</button></div>
           <div class="nv-secondary-row"><button id="nv-share-maps-page">🗺️ Google Maps</button><button id="nv-share-wa-page">💬 WhatsApp</button></div>
           <div class="nv-secondary-row"><button id="nv-save-page">Guardar</button><button id="nv-share-page">Compartir</button><button id="nv-routes-page">Mis rutas</button></div>
@@ -113,8 +113,17 @@
         </div>
       </div>
       <div id="nv-sheet-weather" class="nv-sheet">
-        <div class="nv-sheet-head"><h3>Clima en el centro del mapa</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
-        <div id="nv-weather-view">Consultando…</div>
+        <div class="nv-sheet-head"><h3>Nubes, radar y clima</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
+        <div class="nv-choice">
+          <button id="nv-nasa-toggle">🛰️ NASA (nubes)</button>
+          <button id="nv-radar-toggle">🌧️ Radar de lluvia</button>
+          <button id="nv-weather-here-menu">☀️ Clima aquí</button>
+          <button id="nv-weather-route-menu">🌦️ Clima en ruta</button>
+        </div>
+        <div id="nv-weather-route-controls" style="display:none;margin-top:10px">
+          <div class="nv-search-row"><input type="date" id="nv-weather-date" aria-label="Fecha del pronóstico"><button class="nv-primary" id="nv-weather-go" style="width:auto;padding:9px 12px;margin:0">Ver</button></div>
+        </div>
+        <div id="nv-weather-view" style="margin-top:10px;font-size:13px"></div>
       </div>
       <div id="nv-search-sheet" class="nv-sheet">
         <div class="nv-sheet-head"><h3 id="nv-search-title">Buscar</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
@@ -364,7 +373,7 @@
     $('#nv-poi').addEventListener('click', () => openSheet('nv-sheet-poi'));
     $('#nv-search').addEventListener('click', () => openNativeSearch('lookup'));
     $('#nv-layers').addEventListener('click', () => openSheet('nv-sheet-layers'));
-    $('#nv-weather').addEventListener('click', () => { openSheet('nv-sheet-weather'); loadNativeWeather(); });
+    $('#nv-weather').addEventListener('click', () => { openSheet('nv-sheet-weather'); const v=$('#nv-weather-view'); if(v && !v.textContent.trim()) v.textContent='Elige una opción.'; });
     $('#nv-close').addEventListener('click', closePanel);
     $$('[data-nv-close-sheet]').forEach(b => b.addEventListener('click', closeSheets));
 
@@ -386,7 +395,7 @@
       const a = b.dataset.nvSettings; closeSheets();
       if (a === 'tools') { closePanel(); const t = document.getElementById('btn-tools'); if (t) t.click(); }
       else if (a === 'layers') openSheet('nv-sheet-layers');
-      else if (a === 'weather') { openSheet('nv-sheet-weather'); loadNativeWeather(); }
+      else if (a === 'weather') { openSheet('nv-sheet-weather'); }
       else if (a === 'help') { const v = $('#mobile-version'); if (v) v.click(); }
     }));
     $$('[data-nv-poi-kind]').forEach(b => b.addEventListener('click', () => {
@@ -422,7 +431,12 @@
     $('#nv-route-reset-page')?.addEventListener('click', () => { const b = document.getElementById('btn-reset-route'); if (b) b.click(); renderRoutePage(); });
     $('#nv-gps-route')?.addEventListener('click', () => { const b = document.getElementById('btn-gps'); if (b) b.click(); const sum = $('#nv-route-page-summary'); if (sum) sum.textContent = 'Obteniendo GPS…'; setTimeout(renderRoutePage, 1600); });
     $('#nv-manual-route')?.addEventListener('click', () => { closeNativePages(); const b = document.getElementById('btn-manual-map'); if (b) b.click(); markActive('map'); });
-    $('#nv-weather-route')?.addEventListener('click', () => { openSheet('nv-sheet-weather'); loadNativeWeather(); });
+    $('#nv-weather-route-page')?.addEventListener('click', () => { openSheet('nv-sheet-weather'); });
+    $('#nv-nasa-toggle')?.addEventListener('click', toggleNasaLayer);
+    $('#nv-radar-toggle')?.addEventListener('click', toggleRadar);
+    $('#nv-weather-here-menu')?.addEventListener('click', loadNativeWeather);
+    $('#nv-weather-route-menu')?.addEventListener('click', showRouteWeatherControls);
+    $('#nv-weather-go')?.addEventListener('click', loadRouteWeather);
     $('#nv-poi-route')?.addEventListener('click', () => openSheet('nv-sheet-poi'));
     $('#nv-gpx-route')?.addEventListener('click', () => { closeNativePages(); const t = document.getElementById('btn-tools'); if (t) t.click(); const r = document.getElementById('btn-routes-toggle'); if (r) setTimeout(() => r.click(), 80); });
     $('#nv-traffic-route')?.addEventListener('click', () => { if (window.openModal) window.openModal('traffic-modal'); });
@@ -531,21 +545,93 @@
   function loadNativeWeather() {
     const box = $('#nv-weather-view');
     if (!box || !window.map) return;
-    const c = window.map.getCenter();
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat.toFixed(4)}&longitude=${c.lng.toFixed(4)}&current=temperature_2m,wind_speed_10m,weather_code&timezone=auto`;
-    box.textContent = 'Consultando…';
-    fetch(url, { cache: 'no-store' }).then(r => r.json()).then(d => {
-      if (!d.current) throw new Error('sin datos');
-      const w = d.current;
-      const icon = wmo(w.weather_code);
-      box.innerHTML = `<div style="font-size:34px;text-align:center;margin:6px 0">${icon}</div>
-        <div style="text-align:center"><strong>${Math.round(w.temperature_2m)} °C</strong> · ${wmoText(w.weather_code)}</div>
-        <div style="text-align:center;color:#77808b;margin-top:6px">Viento ${Math.round(w.wind_speed_10m)} km/h</div>
-        <div style="text-align:center;color:#9aa3ad;font-size:12px;margin-top:8px">${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</div>`;
-    }).catch(e => { box.textContent = 'No se pudo obtener el clima: ' + e.message; });
+    const run = (lat, lon, label) => {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,wind_speed_10m,weather_code&timezone=auto`;
+      box.textContent = 'Consultando.';
+      fetch(url, { cache: 'no-store' }).then(r => r.json()).then(d => {
+        if (!d.current) throw new Error('sin datos');
+        const w = d.current;
+        box.innerHTML = `<div style="font-size:34px;text-align:center;margin:6px 0">${wmo(w.weather_code)}</div>
+          <div style="text-align:center"><strong>${Math.round(w.temperature_2m)} °C</strong> · ${wmoText(w.weather_code)}</div>
+          <div style="text-align:center;color:#77808b;margin-top:6px">Viento ${Math.round(w.wind_speed_10m)} km/h</div>
+          <div style="text-align:center;color:#9aa3ad;font-size:12px;margin-top:8px">${escapeHtml(label)} · ${lat.toFixed(4)}, ${lon.toFixed(4)}</div>`;
+      }).catch(e => { box.textContent = 'No se pudo obtener el clima: ' + e.message; });
+    };
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(p => run(p.coords.latitude, p.coords.longitude, 'tu ubicación'), () => { const c = window.map.getCenter(); run(c.lat, c.lng, 'centro del mapa'); }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+    } else { const c = window.map.getCenter(); run(c.lat, c.lng, 'centro del mapa'); }
   }
   function wmo(c) { if (c === 0) return '☀️'; if (c <= 3) return '⛅'; if (c <= 48) return '🌫️'; if (c <= 57) return '🌦️'; if (c <= 67) return '🌧️'; if (c <= 77) return '❄️'; if (c <= 82) return '🌧️'; if (c <= 86) return '🌨️'; return '⛈️'; }
   function wmoText(c) { if (c === 0) return 'Despejado'; if (c <= 3) return 'Poco nuboso'; if (c <= 48) return 'Niebla'; if (c <= 57) return 'Llovizna'; if (c <= 67) return 'Lluvia'; if (c <= 77) return 'Nieve'; if (c <= 82) return 'Chubascos'; if (c <= 86) return 'Nieve'; return 'Tormenta'; }
+  let nvNasaLayer = null, nvRadarLayer = null, nvRadarPath = null;
+  function gibsDate() {
+    const utc = new Date();
+    const offset = utc.getUTCHours() >= 12 ? 0 : 86400000;
+    return new Date(Date.now() - offset).toISOString().slice(0, 10);
+  }
+  function toggleNasaLayer() {
+    if (!window.map || !window.L) return;
+    if (nvNasaLayer) { window.map.removeLayer(nvNasaLayer); nvNasaLayer = null; $('#nv-nasa-toggle')?.classList.remove('on'); toast('NASA (nubes) desactivado'); return; }
+    const date = gibsDate();
+    const url = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
+    nvNasaLayer = window.L.tileLayer(url, { maxZoom: 9, maxNativeZoom: 9, attribution: '© NASA GIBS' }).addTo(window.map);
+    if (window.map.getZoom() > 7) window.map.setZoom(7);
+    $('#nv-nasa-toggle')?.classList.add('on');
+    toast(`NASA (nubes) · ${date} · zoom 7`);
+  }
+  async function toggleRadar() {
+    if (!window.map || !window.L) return;
+    if (nvRadarLayer) { window.map.removeLayer(nvRadarLayer); nvRadarLayer = null; $('#nv-radar-toggle')?.classList.remove('on'); toast('Radar de lluvia desactivado'); return; }
+    try {
+      if (!nvRadarPath) {
+        const r = await fetch('https://api.rainviewer.com/public/weather-maps.json', { cache: 'no-store' });
+        const j = await r.json();
+        const past = j.radar?.past || [];
+        if (!past.length) throw new Error('sin radar');
+        nvRadarPath = past[past.length - 1].path;
+      }
+      const url = `https://tilecache.rainviewer.com${nvRadarPath}/256/{z}/{x}/{y}/2/1_1.png`;
+      nvRadarLayer = window.L.tileLayer(url, { maxZoom: 7, maxNativeZoom: 7, opacity: 0.7, attribution: '© RainViewer' }).addTo(window.map);
+      if (window.map.getZoom() > 7) window.map.setZoom(7);
+      $('#nv-radar-toggle')?.classList.add('on');
+      toast('Radar de lluvia activado · zoom 7');
+    } catch (e) { toast('Radar: ' + e.message, 'warn'); }
+  }
+  function routeWeatherPoints() {
+    const pts = [];
+    if (window.startTown?.la) pts.push({ lat: window.startTown.la, lon: window.startTown.lo, n: window.startTown.n || 'Salida' });
+    (window.waypoints || []).forEach(w => { if (w.la != null) pts.push({ lat: w.la, lon: w.lo, n: w.n || 'Parada' }); });
+    if (window.endTown?.la) pts.push({ lat: window.endTown.la, lon: window.endTown.lo, n: window.endTown.n || 'Destino' });
+    return pts;
+  }
+  function showRouteWeatherControls() {
+    const box = $('#nv-weather-route-controls'), date = $('#nv-weather-date');
+    if (!box || !date) return;
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    const iso = x => x.toISOString().slice(0, 10);
+    date.value = iso(d); date.min = iso(new Date()); const max = new Date(); max.setDate(max.getDate() + 16); date.max = iso(max);
+    box.style.display = 'block';
+    const view = $('#nv-weather-view'); if (view) view.textContent = 'Elige el día y pulsa Ver.';
+  }
+  async function loadRouteWeather() {
+    const pts = routeWeatherPoints();
+    if (!pts.length) { toast('Añade salida, paradas o destino', 'warn'); return; }
+    const date = $('#nv-weather-date')?.value;
+    const view = $('#nv-weather-view'); if (!date || !view) return;
+    view.innerHTML = 'Consultando clima…';
+    const results = await Promise.allSettled(pts.map(p => fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat.toFixed(4)}&longitude=${p.lon.toFixed(4)}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto&start_date=${date}&end_date=${date}`, { cache: 'no-store' }).then(r => r.json())));
+    let html = `<div style="font-weight:800;color:#c2410c;margin-bottom:6px">Clima · ${escapeHtml(date)}</div>`;
+    let n = 0;
+    results.forEach((r, i) => {
+      if (r.status !== 'fulfilled' || !r.value?.daily) return;
+      const d = r.value.daily;
+      const tmin = d.temperature_2m_min?.[0], tmax = d.temperature_2m_max?.[0], prc = d.precipitation_sum?.[0] ?? 0, cod = d.weather_code?.[0] ?? 0;
+      if (n++) html += '<div style="height:1px;background:#e6e9ee"></div>';
+      html += `<div style="display:flex;align-items:center;gap:9px;padding:9px 0"><div style="font-size:24px;width:32px;text-align:center">${wmo(cod)}</div><div style="flex:1;min-width:0"><strong style="display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(pts[i].n)}</strong><small style="color:#697381">${wmoText(cod)} · ${prc} mm</small></div><strong style="color:#c2410c;font-size:13px">${Math.round(tmax)}° / ${Math.round(tmin)}°</strong></div>`;
+    });
+    view.innerHTML = n ? html : 'No se pudo obtener el clima.';
+  }
+
 
   function toggleCompass() {
     compassOn = !compassOn;
@@ -639,9 +725,10 @@
       ctx.fillStyle = a === 0 ? '#ff6a00' : '#e3e9ef'; ctx.fillText(txt, Math.cos(rad) * rr, Math.sin(rad) * rr);
     });
     ctx.shadowBlur = 0;
-    // Aguja clásica: rojo siempre al norte; el rumbo se marca en el aro.
+    // Aguja clasica: gira con el rumbo real de la brujula.
+    ctx.save(); ctx.rotate(heading * Math.PI / 180);
     ctx.beginPath(); ctx.moveTo(0, -R * .46); ctx.lineTo(8 * dpr, 4 * dpr); ctx.lineTo(0, 0); ctx.lineTo(-8 * dpr, 4 * dpr); ctx.closePath();
-    ctx.fillStyle = '#e53935'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, R * .46); ctx.lineTo(8 * dpr, -4 * dpr); ctx.lineTo(0, 0); ctx.lineTo(-8 * dpr, -4 * dpr); ctx.closePath(); ctx.fillStyle = '#1976d2'; ctx.fill();
+    ctx.fillStyle = '#e53935'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, R * .46); ctx.lineTo(8 * dpr, -4 * dpr); ctx.lineTo(0, 0); ctx.lineTo(-8 * dpr, -4 * dpr); ctx.closePath(); ctx.fillStyle = '#1976d2'; ctx.fill(); ctx.restore();
     const hrad = (heading - 90) * Math.PI / 180;
     ctx.beginPath(); ctx.moveTo(Math.cos(hrad) * (R - 2 * dpr), Math.sin(hrad) * (R - 2 * dpr));
     ctx.lineTo(Math.cos(hrad - .035) * (R - 15 * dpr), Math.sin(hrad - .035) * (R - 15 * dpr));
