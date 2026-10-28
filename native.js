@@ -198,6 +198,7 @@
   }
 
   function openSheet(id) {
+    cancelNvManual(true);
     $$('.nv-sheet').forEach(s => s.classList.remove('open'));
     const s = document.getElementById(id); if (s) s.classList.add('open');
     document.body.classList.add('nv-sheet-open');
@@ -235,6 +236,7 @@
   }
   function closeQuickRoute() { if (routeInfoOpen) { routeInfoOpen = false; syncRouteInfo(); } }
   function closeOtherBottomMenus(except) {
+    cancelNvManual(true);
     if (except !== 'sheets') closeSheets();
     if (except !== 'pages') closeNativePages();
     if (except !== 'tools') closeToolsPanel();
@@ -565,6 +567,13 @@
     $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true');
     routeInfoOpen = true; syncRouteInfo(); markActive('map');
   }
+  function cancelNvManual(silent) {
+    if (!nvManualTarget) return;
+    nvManualTarget = null; syncManualBtns();
+    $('#nv-manual-pick')?.classList.remove('show');
+    $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true');
+    if (!silent) toast('Selección manual cancelada');
+  }
   function clearNvManualMarks() {
     nvManualMarks.forEach(x => { try { window.map.removeLayer(x.mk); } catch (_) {} });
     nvManualMarks = [];
@@ -697,7 +706,7 @@
       closeSheets();
       if (a === 'save') { document.getElementById('btn-save')?.click(); }
       else if (a === 'record') { openSheet('nv-sheet-record'); }
-      else if (a === 'routes') { closeNativePages(); setTimeout(() => { document.getElementById('btn-tools')?.click(); setTimeout(() => document.getElementById('btn-routes-toggle')?.click(), 120); }, 0); }
+      else if (a === 'routes') { closeNativePages(); markActive('tools'); setTimeout(() => { document.getElementById('btn-tools')?.click(); setTimeout(() => document.getElementById('btn-routes-toggle')?.click(), 120); }, 0); }
     }));
     $$('[data-nv-poi-kind]').forEach(b => b.addEventListener('click', () => {
       const kind = b.dataset.nvPoiKind; closeSheets(); loadNativePois(kind);
@@ -715,7 +724,7 @@
     $('#nv-ri-calc')?.addEventListener('click', () => { document.getElementById('btn-calc')?.click(); });
     $('#nv-ri-reset')?.addEventListener('click', () => { document.getElementById('btn-reset-route')?.click(); nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); syncManualBtns(); clearNvManualMarks(); routeInfoOpen = false; syncRouteInfo(); markActive('map'); closeSheets(); });
     $('#nv-manual-add')?.addEventListener('click', nvConfirmManual);
-    $('#nv-manual-cancel')?.addEventListener('click', () => { nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true'); syncManualBtns(); markActive('map'); toast('Selección manual cancelada'); });
+    $('#nv-manual-cancel')?.addEventListener('click', () => { cancelNvManual(false); markActive('map'); });
     $('#nv-record-btn')?.addEventListener('click', toggleNativeRecord);
     $('#nv-credits-close')?.addEventListener('click', closeSheets);
     $('#nv-share-app')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share')?.click(); });
@@ -764,6 +773,13 @@
     $('#nv-mode').addEventListener('click', toggleCompass);
     $('#nv-nav').addEventListener('click', () => { const b = document.getElementById('btn-follow-map'); if (b) b.click(); else toast('GPS no disponible'); });
     $('#nv-profile').addEventListener('click', openProfile);
+    const toolsPanel = document.getElementById('tools-panel');
+    if (toolsPanel && !toolsPanel.__nvObserved) {
+      toolsPanel.__nvObserved = true;
+      new MutationObserver(() => {
+        if (toolsPanel.hidden && document.querySelector('[data-nv-action="tools"].active')) markActive('map');
+      }).observe(toolsPanel, { attributes: true, attributeFilter: ['hidden'] });
+    }
     $('#nv-route-main').addEventListener('click', () => { routeInfoOpen = !routeInfoOpen; syncRouteInfo(); });
 
     $$('[data-nv-layer]').forEach(b => b.addEventListener('click', () => {
