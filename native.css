@@ -92,7 +92,7 @@ html.nv-panel-open #nv-locate,html.nv-panel-open #nv-bottom,html.nv-panel-open #
 html.nv-panel-open #sidebar{box-shadow:none!important}
 
 /* Native sheets */
-.nv-sheet{position:fixed;z-index:1800;left:0;right:0;bottom:0;max-height:82dvh;overflow:auto;
+.nv-sheet{position:fixed;z-index:1800;left:0;right:0;bottom:calc(78px + env(safe-area-inset-bottom,0px));max-height:82dvh;overflow:auto;
   background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.24);
   padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));display:none}
 .nv-sheet.open{display:block}
@@ -305,7 +305,7 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
 .btn-sec.active,.btn-grp button.active,.btn-grp button.active[data-v="m"],
 .map-layer-btn.active,.map-layer-toggle.active,.stats-row .cp-btn.active,
 .nv-ri-mini.on,#nv-ri-gps.on,#nv-record-btn.on,.gps-on{
-  border-color:var(--sel)!important;background:var(--sel-soft)!important;color:var(--sel-text)!important}
+  border-color:var(--sel)!important;background:#fff!important;color:var(--sel-text)!important}
 #nv-record-btn.on{font-weight:800!important}
 .nv-tab.active,.nv-tab.info.active{
   border-color:var(--sel)!important;background:rgba(255,255,255,.04)!important;color:#fff!important;
