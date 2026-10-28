@@ -48,7 +48,7 @@
       </div>
       <nav id="nv-bottom" aria-label="Navegación principal">
         <button class="nv-tab active" data-nv-action="map" aria-label="Mapa y ruta">🏍️</button>
-        <button class="nv-tab" data-nv-action="route" aria-label="Ruta">⚙️</button>
+        <button class="nv-tab" data-nv-action="settings" aria-label="Ruta">⚙️</button>
         <button class="nv-tab" data-nv-action="near" aria-label="Fuentes cerca de ti">⛲</button>
         <button class="nv-tab" data-nv-action="tools" aria-label="Datos y rutas guardadas">☰</button>
         <button class="nv-tab info" data-nv-tab="info" aria-label="Información">ℹ️</button>
@@ -79,13 +79,31 @@
         </div>
       </div>
       <div id="nv-routeinfo">
-        <div class="nv-ri-head"><strong>Ruta</strong><button id="nv-ri-close" aria-label="Ocultar">✕</button></div>
-        <div class="nv-ri-row"><button class="nv-ri-main" id="nv-ri-start"><small>SALIDA</small><strong id="nv-ri-start-name">Elegir salida</strong></button><button class="nv-ri-mini" id="nv-ri-gps">GPS</button><button class="nv-ri-mini" id="nv-ri-start-manual">✋</button></div>
-        <div class="nv-ri-row"><button class="nv-ri-main" id="nv-ri-wps"><small>PARADAS</small><strong id="nv-ri-wps-name">0 / 10</strong></button><button class="nv-ri-mini" id="nv-ri-add-wp">＋</button></div>
-        <div class="nv-ri-row"><button class="nv-ri-main" id="nv-ri-end"><small>DESTINO</small><strong id="nv-ri-end-name">Elegir destino</strong></button><button class="nv-ri-mini" id="nv-ri-end-manual">✋</button></div>
-        <button id="nv-ri-open" class="nv-ri-open">Abrir panel Ruta</button>
+        <div class="nv-ri-row">
+          <button class="nv-ri-main" id="nv-ri-start"><strong id="nv-ri-start-name">🏁 Salida 🔍</strong></button>
+          <button class="nv-ri-mini" id="nv-ri-gps">📍 GPS</button>
+          <button class="nv-ri-mini" id="nv-ri-start-manual">✋ Manual</button>
+        </div>
+        <div class="nv-ri-row">
+          <button class="nv-ri-main" id="nv-ri-wps"><strong id="nv-ri-wps-name">➕ Paradas: 0/10 🔍</strong></button>
+          <button class="nv-ri-mini" id="nv-ri-wp-manual">✋ Manual</button>
+        </div>
+        <div class="nv-ri-row">
+          <button class="nv-ri-main" id="nv-ri-end"><strong id="nv-ri-end-name">🎯 Destino 🔍</strong></button>
+          <button class="nv-ri-mini" id="nv-ri-end-manual">✋ Manual</button>
+        </div>
+        <div class="nv-ri-actions">
+          <button id="nv-ri-undo">↩️ Atrás</button>
+          <button id="nv-ri-calc">Calcular</button>
+          <button id="nv-ri-reset">🗑️ Reset</button>
+        </div>
       </div>
       <button id="nv-close" aria-label="Volver al mapa">←</button>
+      <div id="nv-manual-pick" aria-hidden="true">
+        <div class="nv-cross-h"></div><div class="nv-cross-v"></div>
+        <div id="nv-manual-tag">SALIDA</div>
+        <button id="nv-manual-add" aria-label="Fijar punto">＋</button>
+      </div>
       <div id="nv-sheet-layers" class="nv-sheet">
         <div class="nv-sheet-head"><h3>Capas del mapa</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div class="nv-choice">
@@ -106,11 +124,26 @@
         <button class="nv-sheet-close" id="nv-poi-clear" style="width:100%;margin-top:10px;border-radius:12px">Quitar POIs</button>
       </div>
       <div id="nv-sheet-settings" class="nv-sheet">
-        <div class="nv-sheet-head"><h3>Ajustes</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
+        <div class="nv-sheet-head"><h3>⚙️ Ruta</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div class="nv-choice">
-          <button data-nv-settings="tools">Rutas y datos</button><button data-nv-settings="layers">Capas</button>
-          <button data-nv-settings="weather">Clima</button><button data-nv-settings="help">Cómo usar</button>
+          <button data-nv-settings="share">🔗 Compartir</button>
+          <button data-nv-settings="save">💾 Guardar</button>
+          <button data-nv-settings="record">⏺️ Grabar recorrido</button>
+          <button data-nv-settings="routes">📁 Mis rutas guardadas</button>
         </div>
+      </div>
+      <div id="nv-sheet-share" class="nv-sheet">
+        <div class="nv-sheet-head"><h3>Compartir ruta</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
+        <div class="nv-choice">
+          <button id="nv-share-app">📤 Compartir (elegir app)</button>
+          <button id="nv-share-wa">🟢 WhatsApp</button>
+          <button id="nv-share-maps">🗺️ Abrir en Google Maps</button>
+        </div>
+      </div>
+      <div id="nv-sheet-record" class="nv-sheet">
+        <div class="nv-sheet-head"><h3>⏺️ Grabar ruta</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
+        <div id="nv-record-text" style="font-size:14px;color:#333;margin:6px 0 14px">Pulsa INICIAR para grabar tu recorrido.</div>
+        <button class="nv-primary" id="nv-record-btn">INICIAR GRABACIÓN</button>
       </div>
       <div id="nv-sheet-weather" class="nv-sheet">
         <div class="nv-sheet-head"><h3>Nubes, radar y clima</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
@@ -206,9 +239,9 @@
   }
   function syncRouteInfo() {
     const box = $('#nv-routeinfo'); if (!box) return;
-    $('#nv-ri-start-name').textContent = window.startTown?.n || 'Elegir salida';
-    $('#nv-ri-end-name').textContent = window.endTown?.n || 'Elegir destino';
-    $('#nv-ri-wps-name').textContent = `${(window.waypoints || []).length} / 10`;
+    $('#nv-ri-start-name').textContent = `🏁 ${window.startTown?.n || 'Salida'} 🔍`;
+    $('#nv-ri-end-name').textContent = `🎯 ${window.endTown?.n || 'Destino'} 🔍`;
+    $('#nv-ri-wps-name').textContent = `➕ Paradas: ${(window.waypoints || []).length}/10 🔍`;
     box.classList.toggle('show', routeInfoOpen);
     if (document.querySelector('#nv-page-route.open')) renderRoutePage();
   }
@@ -326,6 +359,96 @@
     }
   }
 
+
+  let nvManualTarget = null, nvManualMarks = [];
+  function startNvManual(target) {
+    const tag = $('#nv-manual-tag'), ov = $('#nv-manual-pick');
+    if (!tag || !ov) return;
+    nvManualTarget = nvManualTarget === target ? null : target;
+    if (!nvManualTarget) { ov.classList.remove('show'); ov.setAttribute('aria-hidden', 'true'); toast('Manual desactivado'); return; }
+    tag.textContent = nvManualTarget === 'start' ? 'SALIDA' : nvManualTarget === 'dest' ? 'DESTINO' : 'PARADA';
+    routeInfoOpen = false; syncRouteInfo();
+    ov.classList.add('show'); ov.setAttribute('aria-hidden', 'false');
+    toast('Mueve el mapa y pulsa + para fijar la ' + tag.textContent);
+  }
+  function nvConfirmManual() {
+    if (!nvManualTarget || !window.map) return;
+    const c = window.map.getCenter();
+    const p = { kind: 'manual', la: c.lat, lo: c.lng, n: '📍 Punto en el mapa', p: '📍 Punto en el mapa' };
+    if (nvManualTarget === 'start') {
+      if (window.setStart) window.setStart(p);
+      toast('Salida fijada en el mapa');
+    } else if (nvManualTarget === 'dest') {
+      if (window.setEnd) window.setEnd(p);
+      toast('Destino fijado en el mapa');
+    } else {
+      const wps = window.waypoints || [];
+      if (wps.length >= 10) { toast('Máximo 10 paradas', 'warn'); return; }
+      const id = 'nv-manual-' + Date.now();
+      const wp = { ...p, id };
+      window.waypoints = wps.concat([wp]);
+      if (window.updSum) window.updSum();
+      if (window.invalidateRoute) window.invalidateRoute({ clearStatus: true });
+      try {
+        const mk = window.L.marker([c.lat, c.lng], { icon: window.L.divIcon({ className: 'nv-manual-marker', html: '📍', iconSize: [28, 28], iconAnchor: [14, 26] }) }).addTo(window.map);
+        nvManualMarks.push({ id, mk });
+      } catch (_) {}
+      toast(`Parada ${window.waypoints.length}/10`);
+    }
+    nvManualTarget = null;
+    $('#nv-manual-pick')?.classList.remove('show');
+    $('#nv-manual-pick')?.setAttribute('aria-hidden', 'true');
+    routeInfoOpen = true; syncRouteInfo();
+  }
+  function clearNvManualMarks() {
+    nvManualMarks.forEach(x => { try { window.map.removeLayer(x.mk); } catch (_) {} });
+    nvManualMarks = [];
+  }
+  function nvUndoRouteStep() {
+    const wps = window.waypoints || [];
+    if (wps.length) {
+      const last = wps[wps.length - 1];
+      const manual = nvManualMarks.find(x => x.id === last.id);
+      if (manual) { try { window.map.removeLayer(manual.mk); } catch (_) {} nvManualMarks = nvManualMarks.filter(x => x !== manual); }
+      if (window.toggleWp) window.toggleWp(last);
+      toast(`Parada quitada (${Math.max(0, wps.length - 1)}/10)`);
+    } else if (window.endTown) {
+      if (window.setEnd) window.setEnd(null);
+      toast('Destino quitado');
+    } else if (window.startTown) {
+      if (window.setStart) window.setStart(null);
+      toast('Salida quitada');
+    } else { toast('No hay nada que quitar', 'warn'); return; }
+    routeInfoOpen = true; syncRouteInfo();
+  }
+  let nvRecording = false, nvRecordWatch = null, nvRecordDist = 0, nvRecordLast = null;
+  function nvKmBetween(a, b) {
+    const R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLon = (b.lon - a.lon) * Math.PI / 180;
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+  function toggleNativeRecord() {
+    const txt = $('#nv-record-text'), btn = $('#nv-record-btn');
+    if (nvRecording) {
+      nvRecording = false;
+      if (nvRecordWatch != null) { try { navigator.geolocation.clearWatch(nvRecordWatch); } catch (_) {} nvRecordWatch = null; }
+      txt.textContent = `Grabación finalizada · ${nvRecordDist.toFixed(2)} km`;
+      btn.textContent = 'INICIAR GRABACIÓN';
+      return;
+    }
+    if (!navigator.geolocation) { toast('GPS no disponible', 'warn'); return; }
+    nvRecording = true; nvRecordDist = 0; nvRecordLast = null;
+    txt.textContent = 'Grabando… 0.00 km';
+    btn.textContent = 'DETENER GRABACIÓN';
+    nvRecordWatch = navigator.geolocation.watchPosition(p => {
+      if (!nvRecording) return;
+      const cur = { lat: p.coords.latitude, lon: p.coords.longitude };
+      if (nvRecordLast) nvRecordDist += nvKmBetween(nvRecordLast, cur);
+      nvRecordLast = cur;
+      txt.textContent = `Grabando… ${nvRecordDist.toFixed(2)} km`;
+    }, e => { toast('GPS: ' + e.message, 'warn'); }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
+  }
+
   function motoAction() {
     const sb = $('#sidebar');
     const wasOpen = !!(sb && sb.classList.contains('open')) || !!document.querySelector('.nv-page.open');
@@ -392,26 +515,33 @@
       openTab(tab);
     }));
     $$('[data-nv-settings]').forEach(b => b.addEventListener('click', () => {
-      const a = b.dataset.nvSettings; closeSheets();
-      if (a === 'tools') { closePanel(); const t = document.getElementById('btn-tools'); if (t) t.click(); }
-      else if (a === 'layers') openSheet('nv-sheet-layers');
-      else if (a === 'weather') { openSheet('nv-sheet-weather'); }
-      else if (a === 'help') { const v = $('#mobile-version'); if (v) v.click(); }
+      const a = b.dataset.nvSettings;
+      if (a === 'share') { closeSheets(); openSheet('nv-sheet-share'); return; }
+      closeSheets();
+      if (a === 'save') { document.getElementById('btn-save')?.click(); }
+      else if (a === 'record') { openSheet('nv-sheet-record'); }
+      else if (a === 'routes') { closeNativePages(); setTimeout(() => { document.getElementById('btn-tools')?.click(); setTimeout(() => document.getElementById('btn-routes-toggle')?.click(), 120); }, 0); }
     }));
     $$('[data-nv-poi-kind]').forEach(b => b.addEventListener('click', () => {
       const kind = b.dataset.nvPoiKind; closeSheets(); loadNativePois(kind);
     }));
     $('#nv-poi-clear')?.addEventListener('click', () => { closeSheets(); clearNativePois(); });
 
-    $('#nv-ri-close')?.addEventListener('click', () => { routeInfoOpen = false; syncRouteInfo(); });
     $('#nv-ri-start')?.addEventListener('click', () => openNativeSearch('start', 'map'));
     $('#nv-ri-end')?.addEventListener('click', () => openNativeSearch('dest', 'map'));
-    $('#nv-ri-end-manual')?.addEventListener('click', () => { const b = document.getElementById('btn-manual-map'); if (b) b.click(); });
-    $('#nv-ri-gps')?.addEventListener('click', () => { const b = document.getElementById('btn-gps'); if (b) b.click(); setTimeout(syncRouteInfo, 1500); });
-    $('#nv-ri-start-manual')?.addEventListener('click', () => { const b = document.getElementById('btn-manual-map'); if (b) b.click(); });
-    $('#nv-ri-add-wp')?.addEventListener('click', () => openNativeSearch('wp', 'map'));
-    $('#nv-ri-wps')?.addEventListener('click', () => { routeInfoOpen = false; syncRouteInfo(); openRoutePage(); });
-    $('#nv-ri-open')?.addEventListener('click', openRoutePage);
+    $('#nv-ri-end-manual')?.addEventListener('click', () => startNvManual('dest'));
+    $('#nv-ri-gps')?.addEventListener('click', () => { document.getElementById('btn-gps')?.click(); setTimeout(syncRouteInfo, 1500); });
+    $('#nv-ri-start-manual')?.addEventListener('click', () => startNvManual('start'));
+    $('#nv-ri-wps')?.addEventListener('click', () => openNativeSearch('wp', 'map'));
+    $('#nv-ri-wp-manual')?.addEventListener('click', () => startNvManual('parada'));
+    $('#nv-ri-undo')?.addEventListener('click', nvUndoRouteStep);
+    $('#nv-ri-calc')?.addEventListener('click', () => { document.getElementById('btn-calc')?.click(); });
+    $('#nv-ri-reset')?.addEventListener('click', () => { document.getElementById('btn-reset-route')?.click(); clearNvManualMarks(); syncRouteInfo(); });
+    $('#nv-manual-add')?.addEventListener('click', nvConfirmManual);
+    $('#nv-record-btn')?.addEventListener('click', toggleNativeRecord);
+    $('#nv-share-app')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share')?.click(); });
+    $('#nv-share-wa')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share-wa')?.click(); });
+    $('#nv-share-maps')?.addEventListener('click', () => { closeSheets(); document.getElementById('btn-share-maps')?.click(); });
     $$('[data-nv-page-close]').forEach(b => b.addEventListener('click', () => { closeNativePages(); syncRouteBar(); markActive('map'); }));
     $$('[data-nv-radius]').forEach(b => b.addEventListener('click', () => {
       nearRadius = Number(b.dataset.nvRadius) || 25; localStorage.setItem('nv:nearRadius', String(nearRadius));
@@ -454,7 +584,7 @@
     $('#nv-mode').addEventListener('click', toggleCompass);
     $('#nv-nav').addEventListener('click', () => { const b = document.getElementById('btn-follow-map'); if (b) b.click(); else toast('GPS no disponible'); });
     $('#nv-profile').addEventListener('click', openProfile);
-    $('#nv-route-main').addEventListener('click', openRoutePage);
+    $('#nv-route-main').addEventListener('click', () => { routeInfoOpen = true; syncRouteInfo(); });
 
     $$('[data-nv-layer]').forEach(b => b.addEventListener('click', () => {
       if (window.setLayer) window.setLayer(b.dataset.nvLayer);
@@ -467,7 +597,7 @@
     si.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const first = $('#nv-search-results .nv-result'); if (first) first.click(); } });
     $('#nv-search-clear').addEventListener('click', () => { si.value = ''; renderNativeSearch(''); si.focus(); });
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheets(); closePanel(); closeNativePages(); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (nvManualTarget) { nvManualTarget = null; $('#nv-manual-pick')?.classList.remove('show'); } closeSheets(); closePanel(); closeNativePages(); } });
   }
 
   function renderNativeSearch(q) {
