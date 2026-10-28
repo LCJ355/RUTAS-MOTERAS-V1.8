@@ -216,6 +216,19 @@
     openSheet(id); return true;
   }
   function anySheetOpen() { return !!document.querySelector('.nv-sheet.open'); }
+  function closeToolsPanel() { const p = document.getElementById('tools-panel'); if (p) p.hidden = true; }
+  function closeInfoModal() {
+    const m = document.getElementById('mobile-help-modal');
+    if (m && !m.hidden && m.style.display !== 'none') m.querySelector('.modal-close')?.click();
+  }
+  function closeQuickRoute() { if (routeInfoOpen) { routeInfoOpen = false; syncRouteInfo(); } }
+  function closeOtherBottomMenus(except) {
+    if (except !== 'sheets') closeSheets();
+    if (except !== 'pages') closeNativePages();
+    if (except !== 'tools') closeToolsPanel();
+    if (except !== 'info') closeInfoModal();
+    if (except !== 'quick') closeQuickRoute();
+  }
 
   function closeNativePages() {
     $$('.nv-page').forEach(p => p.classList.remove('open'));
@@ -599,7 +612,7 @@
   function motoAction() {
     const sb = $('#sidebar');
     const wasOpen = !!(sb && sb.classList.contains('open')) || !!document.querySelector('.nv-page.open');
-    closeSheets(); closeNativePages();
+    closeOtherBottomMenus('quick');
     if (wasOpen) { closePanel(); routeBarHidden = false; routeInfoOpen = false; }
     else routeInfoOpen = !routeInfoOpen;
     syncRouteInfo();
@@ -655,11 +668,11 @@
       const action = b.dataset.nvAction;
       if (action === 'map') { motoAction(); return; }
       if (action === 'route') { if (document.querySelector('#nv-page-route.open')) { closeNativePages(); syncRouteBar(); markActive('map'); } else openRoutePage(); return; }
-      if (action === 'near') { if (document.querySelector('#nv-page-near.open')) { closeNativePages(); syncRouteBar(); markActive('map'); } else openNearPage(); return; }
-      if (action === 'settings') { if (document.getElementById('nv-sheet-settings')?.classList.contains('open')) { closeSheets(); markActive('map'); } else { markActive('settings'); openSheet('nv-sheet-settings'); } return; }
-      if (action === 'tools') { const p = document.getElementById('tools-panel'); if (p && !p.hidden) { p.hidden = true; closeSheets(); markActive('map'); return; } closeSheets(); closeNativePages(); markActive('tools'); setTimeout(() => document.getElementById('btn-tools')?.click(), 0); return; }
+      if (action === 'near') { if (document.querySelector('#nv-page-near.open')) { closeNativePages(); syncRouteBar(); markActive('map'); } else { closeOtherBottomMenus('pages'); openNearPage(); } return; }
+      if (action === 'settings') { if (document.getElementById('nv-sheet-settings')?.classList.contains('open')) { closeSheets(); markActive('map'); } else { closeOtherBottomMenus('sheets'); markActive('settings'); openSheet('nv-sheet-settings'); } return; }
+      if (action === 'tools') { const p = document.getElementById('tools-panel'); if (p && !p.hidden) { p.hidden = true; closeSheets(); markActive('map'); return; } closeOtherBottomMenus('tools'); markActive('tools'); setTimeout(() => document.getElementById('btn-tools')?.click(), 0); return; }
       const tab = b.dataset.nvTab;
-      if (tab === 'info') { const m = document.getElementById('mobile-help-modal'); if (m && !m.hidden && m.style.display !== 'none') { m.querySelector('.modal-close')?.click(); markActive('map'); return; } closeNativePages(); openTab('info'); return; }
+      if (tab === 'info') { const m = document.getElementById('mobile-help-modal'); if (m && !m.hidden && m.style.display !== 'none') { m.querySelector('.modal-close')?.click(); markActive('map'); return; } closeOtherBottomMenus('info'); openTab('info'); return; }
       const sb = $('#sidebar');
       if (sb && sb.classList.contains('open') && activeTab === tab) { closePanel(); return; }
       openTab(tab);
