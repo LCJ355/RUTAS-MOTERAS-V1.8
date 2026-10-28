@@ -352,3 +352,9 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
   border-color:var(--sel)!important;background:rgba(0,0,0,.58)!important;color:#fff!important;
   box-shadow:0 0 0 2px rgba(46,204,113,.30),0 2px 8px rgba(0,0,0,.25)!important}
 .nv-tab.active .nv-tab-ico{color:#fff!important}
+/* Cristal individual para que los iconos se lean sobre el mapa */
+.nv-tab{background:rgba(10,12,16,.50)!important;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  box-shadow:0 2px 12px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.10)!important}
+.nv-tab.active,.nv-tab.info.active{background:rgba(46,204,113,.16)!important;box-shadow:0 0 0 2px rgba(46,204,113,.30),0 2px 12px rgba(0,0,0,.42)!important}
+.nv-tab .nv-info-ico{filter:drop-shadow(0 1px 1px rgba(0,0,0,.7))}
+
