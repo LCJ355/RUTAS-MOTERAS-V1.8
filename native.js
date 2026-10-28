@@ -9,7 +9,8 @@
   let routeBarHidden = false;
   let nearRadius = Number(localStorage.getItem('nv:nearRadius') || 25);
   let nearPos = null;
-  let routeBarEmpty = false;
+  let routeInfoOpen = false;
+  let searchReturn = 'route';
   let searchTarget = 'lookup';
   let compassOn = false;
   let heading = 0;
@@ -76,6 +77,13 @@
           <button id="nv-reset-page" style="width:100%;margin-top:8px;padding:9px;border-radius:12px;border:1px solid #ffd3cf;background:#fff0ef;color:#b42318;font-weight:700">Reset completo</button>
           <button class="nv-secondary-row" id="nv-view-map" style="width:100%;margin-top:8px;padding:10px;border-radius:12px;border:1px solid var(--border);background:#fff;color:#333;font-weight:700">Ver mapa</button>
         </div>
+      </div>
+      <div id="nv-routeinfo">
+        <div class="nv-ri-head"><strong>Ruta</strong><button id="nv-ri-close" aria-label="Ocultar">✕</button></div>
+        <div class="nv-ri-row"><button class="nv-ri-main" id="nv-ri-start"><small>SALIDA</small><strong id="nv-ri-start-name">Elegir salida</strong></button><button class="nv-ri-mini" id="nv-ri-gps">GPS</button><button class="nv-ri-mini" id="nv-ri-start-manual">✋</button></div>
+        <div class="nv-ri-row"><button class="nv-ri-main" id="nv-ri-wps"><small>PARADAS</small><strong id="nv-ri-wps-name">0 / 10</strong></button><button class="nv-ri-mini" id="nv-ri-add-wp">＋</button></div>
+        <div class="nv-ri-row"><button class="nv-ri-main" id="nv-ri-end"><small>DESTINO</small><strong id="nv-ri-end-name">Elegir destino</strong></button><button class="nv-ri-mini" id="nv-ri-end-manual">✋</button></div>
+        <button id="nv-ri-open" class="nv-ri-open">Abrir panel Ruta</button>
       </div>
       <button id="nv-close" aria-label="Volver al mapa">←</button>
       <div id="nv-sheet-layers" class="nv-sheet">
@@ -187,7 +195,16 @@
       list.appendChild(row);
     });
   }
+  function syncRouteInfo() {
+    const box = $('#nv-routeinfo'); if (!box) return;
+    $('#nv-ri-start-name').textContent = window.startTown?.n || 'Elegir salida';
+    $('#nv-ri-end-name').textContent = window.endTown?.n || 'Elegir destino';
+    $('#nv-ri-wps-name').textContent = `${(window.waypoints || []).length} / 10`;
+    box.classList.toggle('show', routeInfoOpen);
+    if (document.querySelector('#nv-page-route.open')) renderRoutePage();
+  }
   function openRoutePage() {
+    closeNativePages(); routeInfoOpen = false; syncRouteInfo();
     openNativePage('nv-page-route'); markActive('route'); renderRoutePage();
   }
   function renderRoutePage() {
@@ -224,8 +241,8 @@
     if (window.syncMm) window.syncMm(); if (window.updSum) window.updSum(); if (window.invalidateRoute) window.invalidateRoute({ clearStatus: true });
     renderRoutePage();
   }
-  function openNativeSearch(target) {
-    searchTarget = target || 'lookup';
+  function openNativeSearch(target, returnTo) {
+    searchTarget = target || 'lookup'; searchReturn = returnTo || 'route';
     const t = $('#nv-search-title');
     if (t) t.textContent = searchTarget === 'start' ? 'Elegir salida' : searchTarget === 'dest' ? 'Elegir destino' : searchTarget === 'wp' ? 'Añadir parada' : 'Buscar';
     openSheet('nv-search-sheet');
@@ -304,12 +321,9 @@
     const sb = $('#sidebar');
     const wasOpen = !!(sb && sb.classList.contains('open')) || !!document.querySelector('.nv-page.open');
     closeSheets(); closeNativePages();
-    if (wasOpen) { closePanel(); routeBarHidden = false; routeBarEmpty = false; }
-    else {
-      const dv = (document.getElementById('r-dist')?.textContent || '').trim();
-      const hasRoute = dv && !/^0\s*km$/i.test(dv);
-      if (hasRoute) routeBarHidden = !routeBarHidden; else routeBarEmpty = !routeBarEmpty;
-    }
+    if (wasOpen) { closePanel(); routeBarHidden = false; routeInfoOpen = false; }
+    else routeInfoOpen = !routeInfoOpen;
+    syncRouteInfo();
     syncRouteBar();
     markActive('map');
   }
@@ -380,15 +394,24 @@
     }));
     $('#nv-poi-clear')?.addEventListener('click', () => { closeSheets(); clearNativePois(); });
 
+    $('#nv-ri-close')?.addEventListener('click', () => { routeInfoOpen = false; syncRouteInfo(); });
+    $('#nv-ri-start')?.addEventListener('click', () => openNativeSearch('start', 'map'));
+    $('#nv-ri-end')?.addEventListener('click', () => openNativeSearch('dest', 'map'));
+    $('#nv-ri-end-manual')?.addEventListener('click', () => { const b = document.getElementById('btn-manual-map'); if (b) b.click(); });
+    $('#nv-ri-gps')?.addEventListener('click', () => { const b = document.getElementById('btn-gps'); if (b) b.click(); setTimeout(syncRouteInfo, 1500); });
+    $('#nv-ri-start-manual')?.addEventListener('click', () => { const b = document.getElementById('btn-manual-map'); if (b) b.click(); });
+    $('#nv-ri-add-wp')?.addEventListener('click', () => openNativeSearch('wp', 'map'));
+    $('#nv-ri-wps')?.addEventListener('click', () => { routeInfoOpen = false; syncRouteInfo(); openRoutePage(); });
+    $('#nv-ri-open')?.addEventListener('click', openRoutePage);
     $$('[data-nv-page-close]').forEach(b => b.addEventListener('click', () => { closeNativePages(); syncRouteBar(); markActive('map'); }));
     $$('[data-nv-radius]').forEach(b => b.addEventListener('click', () => {
       nearRadius = Number(b.dataset.nvRadius) || 25; localStorage.setItem('nv:nearRadius', String(nearRadius));
       $$('[data-nv-radius]').forEach(x => x.classList.toggle('on', x === b)); renderNear();
     }));
     $('#nv-near-refresh')?.addEventListener('click', loadNear);
-    $('#nv-start-card')?.addEventListener('click', () => openNativeSearch('start'));
-    $('#nv-end-card')?.addEventListener('click', () => openNativeSearch('dest'));
-    $('#nv-add-wp')?.addEventListener('click', () => openNativeSearch('wp'));
+    $('#nv-start-card')?.addEventListener('click', () => openNativeSearch('start', 'route'));
+    $('#nv-end-card')?.addEventListener('click', () => openNativeSearch('dest', 'route'));
+    $('#nv-add-wp')?.addEventListener('click', () => openNativeSearch('wp', 'route'));
     $('#nv-calc-page')?.addEventListener('click', () => {
       const btn = document.getElementById('btn-calc'); const sum = $('#nv-route-page-summary');
       if (!window.startTown || !window.startTown.la) { toast('Elige la salida', 'warn'); return; }
@@ -452,7 +475,8 @@
           const obj = { ...pos, n: name };
           if (searchTarget === 'start' && window.setStart) window.setStart(obj);
           else if (searchTarget === 'dest' && window.setEnd) window.setEnd(obj);
-          openRoutePage();
+          if (searchReturn === 'map') { routeInfoOpen = true; syncRouteInfo(); markActive('map'); }
+          else openRoutePage();
         } else if (window.setDestino) window.setDestino(name);
       });
       box.appendChild(d);
@@ -462,9 +486,9 @@
       d.innerHTML = `<div class="t">⛲ ${escapeHtml(f.n)}</div><div class="s">${escapeHtml(f.p || '')}</div>`;
       d.addEventListener('click', () => {
         closeSheets();
-        if (searchTarget === 'start' && window.setStart) { window.setStart(f); openRoutePage(); }
-        else if (searchTarget === 'dest' && window.setEnd) { window.setEnd(f); openRoutePage(); }
-        else if (searchTarget === 'wp' && window.toggleWp) { window.toggleWp(f); openRoutePage(); }
+        if (searchTarget === 'start' && window.setStart) { window.setStart(f); if (searchReturn === 'map') { routeInfoOpen = true; syncRouteInfo(); } else openRoutePage(); }
+        else if (searchTarget === 'dest' && window.setEnd) { window.setEnd(f); if (searchReturn === 'map') { routeInfoOpen = true; syncRouteInfo(); } else openRoutePage(); }
+        else if (searchTarget === 'wp' && window.toggleWp) { window.toggleWp(f); if (searchReturn === 'map') { routeInfoOpen = true; syncRouteInfo(); } else openRoutePage(); }
         else if (window.showFountainOnMap) window.showFountainOnMap(f.id);
       });
       box.appendChild(d);
@@ -495,22 +519,13 @@
     const dv = (dist?.textContent || '').trim();
     const tv = (time?.textContent || '').trim();
     const valid = dv && !/^0\s*km$/i.test(dv) && !/^-$/.test(dv);
-    const showEmpty = !valid && routeBarEmpty;
-    bar.classList.toggle('show', (!!valid && !routeBarHidden) || showEmpty);
+    bar.classList.toggle('show', !!valid && !routeBarHidden);
     if (valid && !routeBarHidden) {
       $('#nv-route-title').textContent = `${dv} · ${tv || ''}`.trim();
       $('#nv-route-sub').textContent = `${start?.textContent || ''} → ${end?.textContent || ''}`;
-    } else if (showEmpty) {
-      const st = window.startTown, en = window.endTown;
-      if (st?.n || en?.n) {
-        $('#nv-route-title').textContent = `${st?.n || 'Salida'} → ${en?.n || 'Destino'}`;
-        $('#nv-route-sub').textContent = 'Toca para calcular o cambiar la ruta';
-      } else {
-        $('#nv-route-title').textContent = 'Configurar ruta';
-        $('#nv-route-sub').textContent = 'Elige salida y destino';
-      }
     }
     if (document.querySelector('#nv-page-route.open')) renderRoutePage();
+    syncRouteInfo();
   }
 
   function loadNativeWeather() {
