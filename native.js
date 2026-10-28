@@ -15,6 +15,7 @@
   let heading = 0;
   let orientHandler = null;
   let geoWatch = null;
+  let compassPos = null;
   
 
   function nvToast(msg) {
@@ -113,6 +114,10 @@
         <div id="nv-search-results"></div>
       </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
+    if (window.map && typeof window.map.on === 'function' && !window.__nvRoseMapBound) {
+      window.__nvRoseMapBound = true;
+      window.map.on('move zoom resize', placeRoseOnMap);
+    }
     const tools = document.getElementById('tools-panel');
     if (tools && !document.getElementById('nv-publish-photos')) {
       tools.insertAdjacentHTML('beforeend', '<button class="tools-item" id="nv-publish-photos">📸 Publicar fotos</button><button class="tools-item" id="nv-publish-access">🔓 Publicar accesos</button>');
@@ -496,8 +501,14 @@
       $('#nv-route-title').textContent = `${dv} · ${tv || ''}`.trim();
       $('#nv-route-sub').textContent = `${start?.textContent || ''} → ${end?.textContent || ''}`;
     } else if (showEmpty) {
-      $('#nv-route-title').textContent = 'Sin ruta';
-      $('#nv-route-sub').textContent = 'Toca para configurar salida y destino';
+      const st = window.startTown, en = window.endTown;
+      if (st?.n || en?.n) {
+        $('#nv-route-title').textContent = `${st?.n || 'Salida'} → ${en?.n || 'Destino'}`;
+        $('#nv-route-sub').textContent = 'Toca para calcular o cambiar la ruta';
+      } else {
+        $('#nv-route-title').textContent = 'Configurar ruta';
+        $('#nv-route-sub').textContent = 'Elige salida y destino';
+      }
     }
     if (document.querySelector('#nv-page-route.open')) renderRoutePage();
   }
@@ -527,7 +538,7 @@
     rose.classList.toggle('show', compassOn);
     btn.classList.toggle('green', compassOn);
     btn.textContent = compassOn ? '🧭' : '🎯';
-    if (compassOn) startHeading(); else stopHeading();
+    if (compassOn) { startHeading(); requestAnimationFrame(placeRoseOnMap); } else { stopHeading(); rose.style.visibility = 'hidden'; }
   }
   function startHeading() {
     const go = () => {
@@ -566,7 +577,9 @@
     window.addEventListener('deviceorientationabsolute', absHandler, true);
     window.addEventListener('deviceorientation', relHandler, true);
     if (navigator.geolocation) geoWatch = navigator.geolocation.watchPosition(p => {
+      compassPos = { lat: p.coords.latitude, lon: p.coords.longitude };
       if (!sensorSeen && typeof p.coords.heading === 'number' && !isNaN(p.coords.heading)) { heading = p.coords.heading; drawRose(); }
+      placeRoseOnMap();
     }, () => {}, { enableHighAccuracy: true, maximumAge: 3000 });
     drawRose();
   }
@@ -578,6 +591,15 @@
     }
     if (geoWatch != null) { try { navigator.geolocation.clearWatch(geoWatch); } catch {} geoWatch = null; }
     sensorSeen = false; absoluteSeen = false; lastRawHeading = -1;
+  }
+  function placeRoseOnMap() {
+    const rose = $('#nv-rose'); if (!rose) return;
+    if (!compassOn || !compassPos || !window.map) { rose.style.visibility = 'hidden'; return; }
+    const p = window.map.latLngToContainerPoint([compassPos.lat, compassPos.lon]);
+    const w = rose.offsetWidth || 253;
+    rose.style.left = (p.x - w / 2) + 'px';
+    rose.style.top = (p.y - w / 2) + 'px';
+    rose.style.visibility = 'visible';
   }
   function drawRose() {
     const cv = $('#nv-rose-canvas'); if (!cv) return;
@@ -602,9 +624,11 @@
       ctx.fillStyle = a === 0 ? '#ff6a00' : '#e3e9ef'; ctx.fillText(txt, Math.cos(rad) * rr, Math.sin(rad) * rr);
     });
     ctx.shadowBlur = 0;
-    // Aguja clasica: rojo SIEMPRE al norte; el rumbo se marca en el aro.
+    // Aguja clásica: el rojo marca el rumbo; a 0° queda al norte.
+    ctx.save(); ctx.rotate(heading * Math.PI / 180);
     ctx.beginPath(); ctx.moveTo(0, -R * .46); ctx.lineTo(8 * dpr, 4 * dpr); ctx.lineTo(0, 0); ctx.lineTo(-8 * dpr, 4 * dpr); ctx.closePath();
     ctx.fillStyle = '#e53935'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, R * .46); ctx.lineTo(8 * dpr, -4 * dpr); ctx.lineTo(0, 0); ctx.lineTo(-8 * dpr, -4 * dpr); ctx.closePath(); ctx.fillStyle = '#1976d2'; ctx.fill();
+    ctx.restore();
     const hrad = (heading - 90) * Math.PI / 180;
     ctx.beginPath(); ctx.moveTo(Math.cos(hrad) * (R - 2 * dpr), Math.sin(hrad) * (R - 2 * dpr));
     ctx.lineTo(Math.cos(hrad - .035) * (R - 15 * dpr), Math.sin(hrad - .035) * (R - 15 * dpr));
@@ -617,12 +641,12 @@
   }
 
   function boot() {
-    if (window.__rutasMoterasReady || window.map) { buildShell(); installRouteObserver(); return; }
+    if (window.__rutasMoterasReady) { buildShell(); installRouteObserver(); return; }
     let tries = 0;
     const t = setInterval(() => {
       tries++;
-      if (window.__rutasMoterasReady || window.map) { clearInterval(t); buildShell(); installRouteObserver(); }
-      else if (tries > 80) clearInterval(t);
+      if (window.__rutasMoterasReady) { clearInterval(t); buildShell(); installRouteObserver(); }
+      else if (tries > 120) clearInterval(t);
     }, 100);
   }
   function installRouteObserver() {
