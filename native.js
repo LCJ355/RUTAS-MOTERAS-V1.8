@@ -7,7 +7,8 @@
   const toast = (m, t) => { try { window.toast ? window.toast(m, t) : nvToast(m); } catch { nvToast(m); } };
   let activeTab = 'fuentes';
   let routeBarHidden = false;
-  let nearRadius = Number(localStorage.getItem('nv:nearRadius') || 25);
+  let nearRadius = Number(localStorage.getItem('nv:nearRadius') || 30);
+  if (![10, 30, 50, 100, 150].includes(nearRadius)) nearRadius = 30;
   let nearPos = null;
   let routeInfoOpen = false;
   let searchReturn = 'route';
@@ -56,7 +57,7 @@
       <div id="nv-page-near" class="nv-page">
         <div class="nv-page-head"><button class="nv-back" data-nv-page-close aria-label="Volver al mapa">←</button><h2>⛲ Fuentes cerca de ti</h2><button class="nv-mini" id="nv-near-refresh" aria-label="Actualizar ubicación">🎯</button></div>
         <div class="nv-page-body">
-          <div class="nv-radius" id="nv-near-radius"><button data-nv-radius="5">5 km</button><button data-nv-radius="10">10 km</button><button data-nv-radius="25">25 km</button><button data-nv-radius="50">50 km</button></div>
+          <div class="nv-radius" id="nv-near-radius"><button data-nv-radius="10">10 km</button><button data-nv-radius="30">30 km</button><button data-nv-radius="50">50 km</button><button data-nv-radius="100">100 km</button><button data-nv-radius="150">150 km</button><button id="nv-near-search" class="nv-radius-search" aria-label="Buscar">🔍</button></div>
           <div id="nv-near-count">Obteniendo ubicación…</div>
           <div id="nv-near-list"></div>
         </div>
@@ -697,6 +698,7 @@
       $$('[data-nv-radius]').forEach(x => x.classList.toggle('on', x === b)); renderNear();
     }));
     $('#nv-near-refresh')?.addEventListener('click', loadNear);
+    $('#nv-near-search')?.addEventListener('click', () => { closeNativePages(); openNativeSearch('lookup', 'map'); });
     $('#nv-start-card')?.addEventListener('click', () => openNativeSearch('start', 'route'));
     $('#nv-end-card')?.addEventListener('click', () => openNativeSearch('dest', 'route'));
     $('#nv-add-wp')?.addEventListener('click', () => openNativeSearch('wp', 'route'));
