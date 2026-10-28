@@ -55,6 +55,8 @@ input,select,textarea{color:var(--text)!important}
 #nv-left button{pointer-events:auto}
 #nv-mode{background:rgba(0,0,0,.58)}
 .nv-compass-ico{width:21px;height:21px;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.nv-target-ico{width:20px;height:20px;display:block}
+.nv-gps-triangle{background:none!important;border:0!important}
 #nv-zoom{position:fixed;z-index:1000;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);
   display:flex;flex-direction:column;gap:6px;transition:bottom .18s ease}
 #nv-zoom button{width:42px;height:42px;border-radius:10px;border:1px solid rgba(255,255,255,.35);
@@ -303,6 +305,7 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
 /* === Semáforo comun: naranja = se puede elegir, verde = elegido === */
 :root{--pick:#ff6a00;--pick-border:#ffd5b8;--pick-soft:#fff7f1;--pick-text:#c2410c;--sel:#2ecc71;--sel-soft:#f2fff7;--sel-text:#127a43}
 #nv-locate{border-color:var(--pick)!important}
+#nv-locate.green{border-color:var(--sel)!important}
 #nv-zoom button{border-color:rgba(255,106,0,.85)!important}
 #nv-search.green{border-color:var(--sel)!important}
 

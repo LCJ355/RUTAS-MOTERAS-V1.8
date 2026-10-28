@@ -41,7 +41,7 @@
       <div id="nv-left"><button id="nv-mode" class="nv-ring nv-38" aria-label="Modo brújula"><svg class="nv-compass-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 3.8 15.2 12H8.8L12 3.8Z" fill="#ff6a00"/><path d="M12 20.2 L8.8 12 L15.2 12 Z" fill="#d8dee6"/><circle cx="12" cy="12" r="1.3" fill="#fff"/></svg></button></div>
       <div id="nv-rose" aria-hidden="true"><div id="nv-rose-deg">0°N</div><canvas id="nv-rose-canvas"></canvas></div>
       <div id="nv-zoom"><button id="nv-zoom-in" aria-label="Acercar">+</button><button id="nv-zoom-out" aria-label="Alejar">−</button></div>
-      <button id="nv-locate" aria-label="Centrar en mi ubicación">📍</button>
+      <button id="nv-locate" aria-label="Centrar en mi ubicación"><svg class="nv-target-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.4" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="2.1" fill="currentColor"/><path d="M12 1.6v5.2M12 17.2v5.2M1.6 12h5.2M17.2 12h5.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button>
       <div id="nv-routebar">
         <button class="nv-nav" id="nv-nav" aria-label="Seguir ruta">▲</button>
         <div class="nv-route-main" id="nv-route-main"><strong id="nv-route-title">Ruta</strong><small id="nv-route-sub">Pulsa para ver detalles</small></div>
@@ -185,6 +185,7 @@
     }
     bindShell();
     observePanel();
+    initGpsTriangle();
     syncRouteBar();
   }
 
@@ -260,6 +261,7 @@
     if (!navigator.geolocation) { fallback(); return; }
     navigator.geolocation.getCurrentPosition(p => {
       nearPos = { lat: p.coords.latitude, lon: p.coords.longitude, label: 'tu ubicación' };
+      startGpsWatch();
       renderNear();
     }, fallback, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
   }
@@ -806,11 +808,46 @@
   }
   function escapeHtml(s) { return ('' + s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
+  let nvGpsWatch = null, nvGpsMarker = null, nvGpsPos = null, nvGpsHeading = null;
+  function nvGpsIcon(rot) {
+    const r = Number.isFinite(rot) ? rot : 0;
+    return window.L.divIcon({
+      className: 'nv-gps-triangle',
+      html: `<svg width="36" height="36" viewBox="0 0 36 36" style="transform:rotate(${r}deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))"><path d="M18 3 L29 30 L18 24 L7 30 Z" fill="#2ecc71" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><circle cx="18" cy="18" r="2.2" fill="#fff"/></svg>`,
+      iconSize: [36, 36], iconAnchor: [18, 18]
+    });
+  }
+  function updateGpsTriangle() {
+    if (!window.map || !nvGpsPos) return;
+    const rot = Number.isFinite(nvGpsHeading) ? nvGpsHeading : heading;
+    if (!nvGpsMarker) {
+      nvGpsMarker = window.L.marker([nvGpsPos.lat, nvGpsPos.lon], { icon: nvGpsIcon(rot), interactive: false, keyboard: false, zIndexOffset: 900 }).addTo(window.map);
+    } else {
+      nvGpsMarker.setLatLng([nvGpsPos.lat, nvGpsPos.lon]);
+      nvGpsMarker.setIcon(nvGpsIcon(rot));
+    }
+  }
+  function startGpsWatch() {
+    if (!navigator.geolocation || nvGpsWatch != null) return;
+    nvGpsWatch = navigator.geolocation.watchPosition(p => {
+      nvGpsPos = { lat: p.coords.latitude, lon: p.coords.longitude };
+      if (typeof p.coords.heading === 'number' && !isNaN(p.coords.heading) && p.coords.speed > 0.5) nvGpsHeading = p.coords.heading;
+      updateGpsTriangle();
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 3000, timeout: 20000 });
+  }
+  function initGpsTriangle() {
+    if (!navigator.geolocation) return;
+    if (navigator.permissions?.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then(s => { if (s.state === 'granted') startGpsWatch(); }).catch(() => {});
+    }
+  }
+
   function centerOnMe() {
     if (!navigator.geolocation || !window.map) { toast('GPS no disponible'); return; }
     navigator.geolocation.getCurrentPosition(p => {
+      nvGpsPos = { lat: p.coords.latitude, lon: p.coords.longitude }; updateGpsTriangle(); startGpsWatch();
       window.map.setView([p.coords.latitude, p.coords.longitude], Math.max(window.map.getZoom(), 16), { animate: true });
-      $('#nv-locate').style.borderColor = '#2ecc71';
+      $('#nv-locate').classList.add('green');
     }, e => toast('GPS: ' + (e.code === 1 ? 'permiso denegado' : 'no disponible'), 'warn'), { enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 });
   }
 
@@ -978,6 +1015,7 @@
     };
     const absHandler = e => { if (typeof e.alpha === 'number') absoluteSeen = true; apply(e, true); };
     const relHandler = e => { if (!absoluteSeen) apply(e, false); };
+    startGpsWatch();
     orientHandler = { absHandler, relHandler };
     window.addEventListener('deviceorientationabsolute', absHandler, true);
     window.addEventListener('deviceorientation', relHandler, true);
@@ -1042,6 +1080,7 @@
     ctx.restore();
     const card = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'][Math.round(heading / 45) % 8];
     $('#nv-rose-deg').textContent = `${Math.round(heading)}°${card}`;
+    if (nvGpsMarker) updateGpsTriangle();
   }
 
   function boot() {
