@@ -89,11 +89,10 @@ body.nv-routebar-open #nv-zoom{bottom:calc(env(safe-area-inset-bottom,0px) + 150
   background:#101010;color:#fff;font-size:19px;flex:none}
 #nv-bottom{position:fixed;z-index:1100;left:0;right:0;bottom:0;height:calc(78px + env(safe-area-inset-bottom,0px));
   padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:space-around;
-  background:rgba(10,10,10,.94);border-top:1px solid rgba(255,255,255,.12);
-  box-shadow:0 -5px 20px rgba(0,0,0,.26)}
+  background:transparent!important;border-top:0!important;box-shadow:none!important}
 .nv-tab{width:52px;height:52px;border-radius:50%;border:3px solid var(--accent);background:transparent!important;
   color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;
-  -webkit-tap-highlight-color:transparent}
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.75));-webkit-tap-highlight-color:transparent}
 .nv-tab.active{border-color:var(--pri)}
 .nv-tab.info{border-color:var(--accent)}
 .nv-tab.info.active{border-color:var(--pri)}
