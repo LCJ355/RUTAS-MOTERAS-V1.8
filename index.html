@@ -1973,7 +1973,6 @@ $$('.tab-btn').forEach(btn => {
 });
 // D: close panel on fountain select (mobile)
 document.addEventListener('click', function(e) { const fi = e.target.closest('.fi'); if (fi && window.innerWidth <= 768) { const sb = $('#sidebar'); sb.classList.remove('open'); $('#btn-toggle-panel').textContent = '📋'; } });
-try { localStorage.removeItem('rm:github-token'); sessionStorage.removeItem('rm:github-token'); } catch { }
 parseHash(); loadPhotosFile(); loadAccessFile(); updateAccessStatus();
 renderList(); updSum(); if (mcg.getLayers().length > 0) try { map.fitBounds(mcg.getBounds().pad(0.08)); } catch {} renderSaved(); updateSaveStatus();
 
