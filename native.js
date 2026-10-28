@@ -123,6 +123,10 @@
         </div>
         <button class="nv-sheet-close" id="nv-poi-clear" style="width:100%;margin-top:10px;border-radius:12px">Quitar POIs</button>
       </div>
+      <div id="nv-sheet-poi-card" class="nv-sheet">
+        <div class="nv-sheet-head"><h3 id="nv-pc-kind">POI</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
+        <div id="nv-pc-body"></div>
+      </div>
       <div id="nv-sheet-settings" class="nv-sheet">
         <div class="nv-sheet-head"><h3>⚙️ Ruta</h3><button class="nv-sheet-close" data-nv-close-sheet>✕</button></div>
         <div class="nv-choice">
@@ -301,10 +305,115 @@
     hotel: { term: 'hotel', q: 'tourism=hotel', km: 15, label: 'Alojamiento', icon: '🛏️' },
     parking: { term: 'aparcamiento', q: 'amenity=parking', km: 15, label: 'Aparcamiento', icon: 'P' },
     drinking_water: { term: 'fuente', q: 'amenity=drinking_water', km: 15, label: 'Fuente de agua', icon: '💧' },
-    hospital: { term: 'hospital', q: 'amenity=hospital', km: 20, label: 'Hospital', icon: 'H' },
+    hospital: { term: 'hospital', q: 'amenity=hospital', km: 20, label: 'Hospital', icon: '🏥' },
     car_repair: { term: 'taller', q: 'shop=car_repair', km: 20, label: 'Taller', icon: '🔧' },
     supermarket: { term: 'supermercado', q: 'shop=supermarket', km: 15, label: 'Supermercado', icon: '🛒' }
   };
+  const NV_POI_COLORS = { dealer: '#ff6a00', fuel: '#2e9e5b', restaurant: '#141414', hotel: '#2f80ed', parking: '#1565c0', drinking_water: '#00acc1', hospital: '#c62828', car_repair: '#ef6c00', supermarket: '#8e44ad' };
+  function nvOsmAddress(ad) {
+    if (!ad) return '';
+    const road = ad.road || ad.pedestrian || ad.footway || '';
+    const num = ad.house_number || '';
+    const city = ad.city || ad.town || ad.village || ad.municipality || '';
+    const cp = ad.postcode || '';
+    return [(road + (num ? ' ' + num : '')).trim(), city, cp].filter(Boolean).join(', ');
+  }
+  function nvTradHours(h) {
+    return String(h || '').replace(/\bMo\b/g, 'Lun').replace(/\bTu\b/g, 'Mar').replace(/\bWe\b/g, 'Mié')
+      .replace(/\bTh\b/g, 'Jue').replace(/\bFr\b/g, 'Vie').replace(/\bSa\b/g, 'Sáb').replace(/\bSu\b/g, 'Dom')
+      .replace(/\bPH\b/g, 'Fest').replace(/\boff\b/g, 'cerrado');
+  }
+  function nvOpenNow(hours) {
+    if (!hours) return null;
+    if (hours.includes('24/7')) return true;
+    const m = String(hours).trim().match(/^([A-Z][a-z])(?:-([A-Z][a-z]))?\s+(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    const day = c => ({ Mo: 1, Tu: 2, We: 3, Th: 4, Fr: 5, Sa: 6, Su: 7 }[c] || 0);
+    const sd = day(m[1]); if (!sd) return null;
+    const ed = m[2] ? day(m[2]) : sd;
+    const st = Number(m[3]) * 60 + Number(m[4]);
+    const en = Number(m[5]) * 60 + Number(m[6]);
+    const now = new Date();
+    const today = now.getDay() === 0 ? 7 : now.getDay();
+    const mins = now.getHours() * 60 + now.getMinutes();
+    const inDays = sd <= ed ? (today >= sd && today <= ed) : (today >= sd || today <= ed);
+    return inDays && mins >= st && mins < en;
+  }
+  function nvPoiDistance(p) {
+    if (!window.map) return 0;
+    const r = compassPos ? { lat: compassPos.lat, lon: compassPos.lon } : { lat: window.map.getCenter().lat, lon: window.map.getCenter().lng };
+    return nvKmBetween(r, { lat: p.lat, lon: p.lon });
+  }
+  function nvPoiFromNominatim(x, kind, cfg) {
+    const ex = x.extratags || {}, ad = x.address || {}, nd = x.namedetails || {};
+    const display = x.display_name || '';
+    const name = x.name || nd.name || display.split(',')[0] || cfg.label;
+    const hours = ex.opening_hours || '';
+    return {
+      id: 'osm-' + (x.osm_type || 'n') + '-' + (x.osm_id || (x.lat + x.lon)),
+      kind, name: name.trim() || cfg.label,
+      lat: Number(x.lat), lon: Number(x.lon),
+      address: nvOsmAddress(ad) || display,
+      phone: ex.phone || ex['contact:phone'] || '',
+      website: ex.website || ex['contact:website'] || ex.url || '',
+      hours, openNow: nvOpenNow(hours)
+    };
+  }
+  function nvPoiFromOverpass(el, kind, cfg) {
+    const t = el.tags || {};
+    const street = (t['addr:street'] || '') + (t['addr:housenumber'] ? ' ' + t['addr:housenumber'] : '');
+    const city = t['addr:city'] || t['addr:town'] || t['addr:village'] || t['addr:municipality'] || '';
+    const addr = [street.trim(), city, t['addr:postcode'] || ''].filter(Boolean).join(', ');
+    const hours = t.opening_hours || '';
+    return {
+      id: 'osm-' + (el.type || 'n') + '-' + (el.id || ((el.lat ?? el.center?.lat) + '' + (el.lon ?? el.center?.lon))),
+      kind, name: t.name || t.brand || t.operator || cfg.label,
+      lat: el.lat ?? el.center?.lat, lon: el.lon ?? el.center?.lon,
+      address: addr, phone: t.phone || t['contact:phone'] || '',
+      website: t.website || t['contact:website'] || '', hours, openNow: nvOpenNow(hours)
+    };
+  }
+  function showNativePoiCard(p) {
+    const cfg = NV_POI[p.kind] || { label: 'POI' };
+    const color = NV_POI_COLORS[p.kind] || '#ff6a00';
+    const kind = $('#nv-pc-kind'), body = $('#nv-pc-body');
+    if (!kind || !body) return;
+    kind.textContent = cfg.label.toUpperCase();
+    kind.style.color = color;
+    const dist = nvPoiDistance(p);
+    const web = p.website ? (p.website.startsWith('http') ? p.website : 'https://' + p.website) : '';
+    const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.lat + ',' + p.lon)}`;
+    body.innerHTML = `
+      <div class="nv-poi-name">${escapeHtml(p.name)}</div>
+      ${p.address ? `<div class="nv-poi-line">${escapeHtml(p.address)}</div>` : ''}
+      ${p.openNow != null ? `<div class="nv-poi-open ${p.openNow ? 'open' : 'closed'}">● ${p.openNow ? 'Abierto ahora' : 'Cerrado ahora'}</div>` : ''}
+      ${p.hours ? `<div class="nv-poi-meta">Horario: ${escapeHtml(nvTradHours(p.hours))}</div>` : ''}
+      ${dist > 0 ? `<div class="nv-poi-meta">A ${dist.toFixed(1)} km en línea recta</div>` : ''}
+      ${p.phone ? `<a class="nv-poi-link" href="tel:${encodeURI(String(p.phone).replace(/[^0-9+]/g, ''))}">☎ ${escapeHtml(p.phone)} (llamar)</a>` : ''}
+      ${web ? `<a class="nv-poi-link" href="${escapeHtml(web)}" target="_blank" rel="noopener">🌐 ${escapeHtml(p.website)}</a>` : ''}
+      <a class="nv-poi-link" href="${maps}" target="_blank" rel="noopener">🧭 Abrir en la app de mapas</a>
+      <div class="nv-poi-actions">
+        <button id="nv-pc-dest">🎯 Destino</button>
+        <button id="nv-pc-wp">+ Parada</button>
+        <button id="nv-pc-close">Cerrar</button>
+      </div>`;
+    $('#nv-pc-dest').addEventListener('click', () => {
+      if (window.setEnd) window.setEnd(p);
+      closeSheets(); routeInfoOpen = true; syncRouteInfo(); markActive('map');
+      toast('Destino: ' + p.name);
+    });
+    $('#nv-pc-wp').addEventListener('click', () => {
+      const wps = window.waypoints || [];
+      if (wps.length >= 10) { toast('Máximo 10 paradas', 'warn'); return; }
+      window.waypoints = wps.concat([{ ...p, id: p.id || ('poi-' + Date.now()) }]);
+      if (window.updSum) window.updSum();
+      if (window.invalidateRoute) window.invalidateRoute({ clearStatus: true });
+      closeSheets(); routeInfoOpen = true; syncRouteInfo(); markActive('map');
+      toast(`Parada ${window.waypoints.length}/10: ${p.name}`);
+    });
+    $('#nv-pc-close').addEventListener('click', closeSheets);
+    openSheet('nv-sheet-poi-card');
+  }
   function clearNativePois() {
     if (nvPoiLayer && window.map) { try { window.map.removeLayer(nvPoiLayer); } catch {} }
     nvPoiLayer = null; nvPoiKind = null;
@@ -317,41 +426,39 @@
     const btn = document.querySelector(`[data-nv-poi-kind="${kind}"]`); if (btn) btn.classList.add('on');
     const c = window.map.getCenter();
     const q = `[out:json][timeout:25];(nwr[${cfg.q}](around:${cfg.km * 1000},${c.lat},${c.lng}););out center 40;`;
-    toast(`Buscando ${cfg.label.toLowerCase()}…`);
+    toast(`Buscando ${cfg.label.toLowerCase()}.`);
     try {
-      let data = null, lastErr = '';
-      // Nominatim es más rápido en móvil; Overpass queda como respaldo.
+      let pois = [], lastErr = '';
       try {
-        const dLat = cfg.km / 111, dLon = cfg.km / (111 * Math.cos(c.lat * Math.PI / 180));
-        const nUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=40&bounded=1&viewbox=${c.lng - dLon},${c.lat + dLat},${c.lng + dLon},${c.lat - dLat}&q=${encodeURIComponent(cfg.term)}`;
-        const nr = await fetch(nUrl, { signal: AbortSignal.timeout(10000) });
-        if (nr.ok) {
-          const arr = await nr.json();
-          const els = (arr || []).map(x => ({ lat: Number(x.lat), lon: Number(x.lon), tags: { name: (x.display_name || '').split(',')[0] } }));
-          if (els.length) data = { elements: els };
-        }
+        const dLat = cfg.km / 111, dLon = cfg.km / (111 * Math.max(0.2, Math.cos(c.lat * Math.PI / 180)));
+        const nUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=40&bounded=1&viewbox=${c.lng - dLon},${c.lat + dLat},${c.lng + dLon},${c.lat - dLat}&q=${encodeURIComponent(cfg.term)}&accept-language=es&extratags=1&addressdetails=1&namedetails=1`;
+        const nr = await fetch(nUrl, { signal: AbortSignal.timeout(12000) });
+        if (!nr.ok) throw new Error('HTTP ' + nr.status);
+        const arr = await nr.json();
+        pois = (arr || []).map(x => nvPoiFromNominatim(x, kind, cfg)).filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon));
       } catch (e) { lastErr = e.message; }
-      if (!data) {
+      if (!pois.length) {
         for (const mirror of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
           try {
-            const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 12000);
+            const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 14000);
             const res = await fetch(mirror + '?data=' + encodeURIComponent(q), { signal: ac.signal });
             clearTimeout(timer);
             if (!res.ok) { lastErr = 'HTTP ' + res.status; continue; }
-            data = await res.json();
-            if (data && data.elements && data.elements.length) break;
+            const data = await res.json();
+            pois = (data.elements || []).map(el => nvPoiFromOverpass(el, kind, cfg)).filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+            if (pois.length) break;
           } catch (e) { lastErr = e.message; }
         }
       }
-      if (!data) throw new Error(lastErr || 'sin respuesta');
+      if (!pois.length) throw new Error(lastErr || 'sin respuesta');
+      pois = pois.filter((p, i, a) => a.findIndex(x => x.id === p.id) === i)
+        .sort((a, b) => nvPoiDistance(a) - nvPoiDistance(b));
       nvPoiLayer = window.L.layerGroup().addTo(window.map);
       let n = 0;
-      (data.elements || []).forEach(el => {
-        const lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon; if (lat == null || lon == null) return;
-        const name = el.tags?.name || el.tags?.operator || cfg.label;
-        const icon = window.L.divIcon({ className: '', html: `<div class="nv-poi-marker" style="--poi:${kind === 'parking' ? '#1565c0' : kind === 'hospital' ? '#c62828' : '#ff6a00'}"><span>${cfg.icon}</span></div>`, iconSize: [30, 30], iconAnchor: [15, 28] });
-        const mk = window.L.marker([lat, lon], { icon }).addTo(nvPoiLayer);
-        mk.bindPopup(`<div class="p-title">${escapeHtml(cfg.label)}</div><div class="p-town">${escapeHtml(name)}</div>`);
+      pois.forEach(p => {
+        const icon = window.L.divIcon({ className: '', html: `<div class="nv-poi-marker" style="--poi:${NV_POI_COLORS[kind] || '#ff6a00'}"><span>${cfg.icon}</span></div>`, iconSize: [30, 30], iconAnchor: [15, 28] });
+        const mk = window.L.marker([p.lat, p.lon], { icon }).addTo(nvPoiLayer);
+        mk.on('click', () => showNativePoiCard(p));
         n++;
       });
       if (!n) { toast('Sin resultados en este radio', 'warn'); clearNativePois(); return; }
@@ -361,13 +468,11 @@
     }
   }
 
-
   let nvManualTarget = null, nvManualMarks = [];
   function syncManualBtns() {
     const ids = { start: '#nv-ri-start-manual', parada: '#nv-ri-wp-manual', dest: '#nv-ri-end-manual' };
     Object.keys(ids).forEach(k => $(ids[k])?.classList.toggle('on', nvManualTarget === k));
   }
-
   function startNvManual(target) {
     const tag = $('#nv-manual-tag'), ov = $('#nv-manual-pick');
     if (!tag || !ov) return;
@@ -381,18 +486,18 @@
   function nvConfirmManual() {
     if (!nvManualTarget || !window.map) return;
     const c = window.map.getCenter();
-    const p = { kind: 'manual', la: c.lat, lo: c.lng, n: '📍 Punto en el mapa', p: '📍 Punto en el mapa' };
+    const pt = { kind: 'manual', la: c.lat, lo: c.lng, n: '📍 Punto en el mapa', p: '📍 Punto en el mapa' };
     if (nvManualTarget === 'start') {
-      if (window.setStart) window.setStart(p);
+      if (window.setStart) window.setStart(pt);
       toast('Salida fijada en el mapa');
     } else if (nvManualTarget === 'dest') {
-      if (window.setEnd) window.setEnd(p);
+      if (window.setEnd) window.setEnd(pt);
       toast('Destino fijado en el mapa');
     } else {
       const wps = window.waypoints || [];
       if (wps.length >= 10) { toast('Máximo 10 paradas', 'warn'); return; }
       const id = 'nv-manual-' + Date.now();
-      const wp = { ...p, id };
+      const wp = { ...pt, id };
       window.waypoints = wps.concat([wp]);
       if (window.updSum) window.updSum();
       if (window.invalidateRoute) window.invalidateRoute({ clearStatus: true });

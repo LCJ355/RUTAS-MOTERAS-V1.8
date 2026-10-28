@@ -230,6 +230,19 @@ body.nv-subpage #nv-routebar,body.nv-subpage #cookie-banner{display:none!importa
 .nv-choice button.on{border-color:var(--accent);background:#fff1e6;color:#c2410c}
 
 .nv-point-card small{display:block;margin-top:3px;color:#ff6a00;font-size:11px;font-weight:700}
+/* Ficha completa de POI */
+.nv-poi-name{font-size:19px;font-weight:800;color:#1b1f24;line-height:1.25;margin:0 0 6px}
+.nv-poi-line{font-size:13.5px;color:#444;line-height:1.45;margin-bottom:4px}
+.nv-poi-open{font-size:13px;font-weight:800;margin:6px 0 3px}
+.nv-poi-open.open{color:#1e9e57}
+.nv-poi-open.closed{color:#c62828}
+.nv-poi-meta{font-size:12.5px;color:#666;line-height:1.45;margin:3px 0}
+.nv-poi-link{display:block;font-size:13.5px;color:#c2410c;font-weight:700;line-height:1.45;padding:5px 0;text-decoration:none;word-break:break-word}
+.nv-poi-actions{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.nv-poi-actions button{flex:1 1 30%;min-width:92px;padding:10px 7px;border-radius:12px;border:1px solid var(--pick-border);background:#fff;color:var(--pick-text);font-weight:800;font-size:12.5px}
+#nv-pc-dest{border-color:var(--pick);color:var(--pick-text)}
+#nv-pc-close{background:#fff;color:var(--pick-text);border-color:var(--pick-border)}
+
 .nv-point-card.dest small{color:#1e9e57}
 
 .nv-wp-head{display:flex;align-items:center;justify-content:space-between;margin:10px 0 4px;color:#1b1f24;font-size:13px}
@@ -272,33 +285,32 @@ html.nv-panel-open #nv-routeinfo,body.nv-subpage #nv-routeinfo,body.nv-sheet-ope
 
 @media(min-width:900px){#nv-routeinfo{bottom:calc(78px + 68px)}}
 /* === Semáforo comun: naranja = se puede elegir, verde = elegido === */
-:root{--pick:#ff6a00;--pick-border:#ffd5b8;--pick-soft:#fff7f1;--pick-text:#c2410c;--sel:#2ecc71;--sel-ink:#063b1d}
+:root{--pick:#ff6a00;--pick-border:#ffd5b8;--pick-soft:#fff7f1;--pick-text:#c2410c;--sel:#2ecc71;--sel-soft:#f2fff7;--sel-text:#127a43}
 #nv-locate{border-color:var(--pick)!important}
 #nv-zoom button{border-color:rgba(255,106,0,.85)!important}
 #nv-close{border-color:var(--pick)!important;color:var(--pick-text)!important;background:var(--pick-soft)!important}
 .nv-sheet-close{border-color:var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
 .nv-choice button,.nv-radius button,.nv-secondary-row button,.nv-page-head .nv-mini,
-.nv-wp-head button,#tools-panel .tools-item,.nv-ri-actions button,.nv-primary,
-.nv-ri-main,.nv-point-card,.nv-wp-row button{
-  border-color:var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
-.nv-ri-main{border-radius:10px!important;padding:7px 8px!important}
-#nv-ri-calc,.nv-primary{background:var(--pick)!important;border-color:var(--pick)!important;color:#fff!important}
-#nv-ri-undo,#nv-ri-reset{border:1px solid var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
-.btn-pri{background:var(--pick)!important;border-color:var(--pick)!important;color:#fff!important}
-.btn-sec,.btn-red{background:var(--pick-soft)!important;border-color:var(--pick-border)!important;color:var(--pick-text)!important}
-.tab-btn.active{color:var(--pick-text)!important;border-bottom-color:var(--pick)!important}
-.btn-grp button,.map-layer-btn,.map-layer-toggle,.map-fit-btn,.stats-row .cp-btn{
-  border-color:var(--pick-border)!important;background:var(--pick-soft)!important;color:var(--pick-text)!important}
+.nv-wp-head button,#tools-panel .tools-item,.nv-ri-actions button,.nv-ri-main,
+.nv-point-card,.nv-wp-row button,.btn-grp button,.map-layer-btn,.map-layer-toggle,
+.map-fit-btn,.stats-row .cp-btn,.btn-sec,.btn-red{
+  border-color:var(--pick-border)!important;background:#fff!important;color:var(--pick-text)!important}
+#nv-ri-calc,.nv-primary,.btn-pri{background:var(--pick)!important;border-color:var(--pick)!important;color:#fff!important}
+#nv-ri-undo,#nv-ri-reset{border:1px solid var(--pick-border)!important;background:#fff!important;color:var(--pick-text)!important}
+.tab-btn.active{color:var(--sel-text)!important;border-bottom-color:var(--sel)!important}
 .modal-close{color:var(--pick-text)!important}
 
-
-/* Elegido: verde */
+/* Elegido: solo borde/aro verde, sin rellenar el boton */
 .nv-choice button.on,.nv-radius button.on,
 .btn-sec.active,.btn-grp button.active,.btn-grp button.active[data-v="m"],
-.map-layer-btn.active,.map-layer-toggle.active,.tab-btn.active,
-.nv-tab.active,.nv-tab.info.active,.nv-ring.green,
-.nv-ri-mini.on,#nv-ri-gps.on,#nv-record-btn.on{
-  border-color:var(--sel)!important;background:var(--sel)!important;color:var(--sel-ink)!important}
-.nv-tab.active .nv-tab-ico{color:var(--sel-ink)!important}
-.nv-ring.green{box-shadow:0 0 0 2px rgba(46,204,113,.32),0 2px 8px rgba(0,0,0,.25)!important}
-#nv-record-btn.on{background:#1e9e57!important;border-color:#1e9e57!important;color:#fff!important}
+.map-layer-btn.active,.map-layer-toggle.active,.stats-row .cp-btn.active,
+.nv-ri-mini.on,#nv-ri-gps.on,#nv-record-btn.on,.gps-on{
+  border-color:var(--sel)!important;background:var(--sel-soft)!important;color:var(--sel-text)!important}
+#nv-record-btn.on{font-weight:800!important}
+.nv-tab.active,.nv-tab.info.active{
+  border-color:var(--sel)!important;background:rgba(255,255,255,.04)!important;color:#fff!important;
+  box-shadow:0 0 0 2px rgba(46,204,113,.30)!important}
+.nv-ring.green{
+  border-color:var(--sel)!important;background:rgba(0,0,0,.58)!important;color:#fff!important;
+  box-shadow:0 0 0 2px rgba(46,204,113,.30),0 2px 8px rgba(0,0,0,.25)!important}
+.nv-tab.active .nv-tab-ico{color:#fff!important}
