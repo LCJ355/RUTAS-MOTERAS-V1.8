@@ -47,7 +47,7 @@
         <button class="nv-profile" id="nv-profile" aria-label="Perfil de altura">▥</button>
       </div>
       <nav id="nv-bottom" aria-label="Navegación principal">
-        <button class="nv-tab active" data-nv-action="map" aria-label="Mapa y ruta">🏍️</button>
+        <button class="nv-tab" data-nv-action="map" aria-label="Mapa y ruta">🏍️</button>
         <button class="nv-tab" data-nv-action="settings" aria-label="Ruta">⚙️</button>
         <button class="nv-tab" data-nv-action="near" aria-label="Fuentes cerca de ti">⛲</button>
         <button class="nv-tab" data-nv-action="tools" aria-label="Datos y rutas guardadas">☰</button>
@@ -606,7 +606,10 @@
     markActive('map');
   }
   function markActive(key) {
-    $$('.nv-tab').forEach(b => b.classList.toggle('active', b.dataset.nvTab === key || b.dataset.nvAction === key));
+    $$('.nv-tab').forEach(b => {
+      const match = b.dataset.nvTab === key || b.dataset.nvAction === key;
+      b.classList.toggle('active', match && (key !== 'map' || routeInfoOpen));
+    });
   }
   function openTab(tab) {
     if (tab === 'info') { closeSheets(); markActive('info'); const v = $('#mobile-version'); if (v) v.click(); else openSheetInfoFallback(); return; }
@@ -819,6 +822,7 @@
     const tv = (time?.textContent || '').trim();
     const valid = dv && !/^0\s*km$/i.test(dv) && !/^-$/.test(dv);
     bar.classList.toggle('show', !!valid && !routeBarHidden);
+    document.body.classList.toggle('nv-routebar-open', !!valid && !routeBarHidden);
     if (valid && !routeBarHidden) {
       $('#nv-route-title').textContent = `${dv} · ${tv || ''}`.trim();
       $('#nv-route-sub').textContent = `${start?.textContent || ''} → ${end?.textContent || ''}`;
